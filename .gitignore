@@ -135,3 +135,5 @@ db.sqlite3
 .idea
 *.pyc
 media/
+voting/migrations/*
+account/migrations/*
