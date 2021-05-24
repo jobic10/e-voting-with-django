@@ -8,6 +8,12 @@ from django.contrib.auth import login, logout
 
 
 def account_login(request):
+    if request.user.is_authenticated:
+        if request.user.user_type == '1':
+            return redirect(reverse("adminDashboard"))
+        else:
+            return redirect(reverse("voterDashboard"))
+
     context = {}
     if request.method == 'POST':
         user = EmailBackend.authenticate(request, username=request.POST.get(
@@ -15,9 +21,9 @@ def account_login(request):
         if user != None:
             login(request, user)
             if user.user_type == '1':
-                return redirect(reverse("admin_home"))
+                return redirect(reverse("adminDashboard"))
             else:
-                return redirect(reverse("voter_home"))
+                return redirect(reverse("voterDashboard"))
         else:
             messages.error(request, "Invalid details")
             return redirect("/")
@@ -45,3 +51,15 @@ def account_register(request):
             messages.error(request, "Provided data failed validation")
             # return account_login(request)
     return render(request, "voting/reg.html", context)
+
+
+def account_logout(request):
+    user = request.user
+    if user.is_authenticated:
+        logout(user)
+        messages.success(request, "Thank you for visiting us!")
+    else:
+        messages.error(
+            request, "You need to be logged in to perform this action")
+
+    return redirect(reverse("account_login"))
