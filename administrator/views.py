@@ -66,3 +66,16 @@ def updateVoter(request):
         messages.error(request, "Access To This Resource Denied")
 
     return redirect(reverse('adminViewVoters'))
+
+
+def deleteVoter(request):
+    if request.method != 'POST':
+        messages.error(request, "Access Denied")
+    try:
+        admin = Voter.objects.get(id=request.POST.get('id')).admin
+        admin.delete()
+        messages.success(request, "Voter Has Been Deleted")
+    except:
+        messages.error(request, "Access To This Resource Denied")
+
+    return redirect(reverse('adminViewVoters'))
