@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  	<meta charset="utf-8">
+  	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  	<title>Voting System using PHP</title>
+  	<!-- Tell the browser to be responsive to screen width -->
+  	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  	<!-- Bootstrap 3.3.7 -->
+  	<link rel="stylesheet" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}">
+    <!-- iCheck for checkboxes and radio inputs -->
+    <link rel="stylesheet" href="{% static 'plugins/iCheck/all.css' %}">
+  	<!-- DataTables -->
+    <link rel="stylesheet" href="{% static 'bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}">
+  	<!-- Font Awesome -->
+  	<link rel="stylesheet" href="{% static 'bower_components/font-awesome/css/font-awesome.min.css' %}">
+  	<!-- Theme style -->
+  	<link rel="stylesheet" href="{% static 'dist/css/AdminLTE.min.css' %}">
+  	<!-- AdminLTE Skins. Choose a skin from the css/skins
+       folder instead of downloading all of them to reduce the load. -->
+  	<link rel="stylesheet" href="{% static 'dist/css/skins/_all-skins.min.css' %}">
+    <link rel="stylesheet" href="{% static 'toastr/toastr.min.css' %} ">
+  	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  	<!--[if lt IE 9]>
+  	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+  	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+  	<![endif]-->
+
+  	<!-- Google Font -->
+  	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+
+  	<style>
+  		.mt20{
+        margin-top: 20px;
+      }
+      .title{
+        font-size: 50px;
+      }
+      #candidate_list{
+        margin-top:20px;
+      }
+
+      #candidate_list ul{
+        list-style-type:none;
+      }
+
+      #candidate_list ul li{ 
+        margin:0 30px 30px 0; 
+        vertical-align:top
+      }
+
+      .clist{
+        margin-left: 20px;
+      }
+
+      .cname{
+        font-size: 25px;
+      }
+
+      .votelist{
+        font-size: 17px;
+      }
+  	</style>		
+</head>
+<body class="hold-transition login-page">
+  {% block content %}
+    
+  {% endblock content %}
+    <!-- jQuery 3 -->
+<script src="{% static 'bower_components/jquery/dist/jquery.min.js' %}"></script>
+<!-- Bootstrap 3.3.7 -->
+<script src="{% static 'bower_components/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+<!-- iCheck 1.0.1 -->
+<script src="{% static 'plugins/iCheck/icheck.min.js' %}"></script>
+<!-- DataTables -->
+<script src="{% static 'bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+<!-- SlimScroll -->
+<script src="{% static 'bower_components/jquery-slimscroll/jquery.slimscroll.min.js' %}"></script>
+<!-- FastClick -->
+<script src="{% static 'bower_components/fastclick/lib/fastclick.js' %}"></script>
+<!-- AdminLTE App -->
+<script src="{% static 'dist/js/adminlte.min.js' %}"></script>
+<!-- Data Table Initialize -->
+<script src="{% static 'toastr/toastr.min.js' %}"></script>
+<script>
+  $(function () {
+    $('#example1').DataTable()
+  	var bookTable = $('#booklist').DataTable({
+      'paging'      : true,
+      'lengthChange': false,
+      'searching'   : true,
+      'ordering'    : true,
+      'info'        : false,
+      'autoWidth'   : false
+    })
+
+    $('#searchBox').on('keyup', function(){
+    	bookTable.search(this.value).draw();
+	});
+
+  })
+</script>
+ {% if messages %}
+    {% for message in messages  %}
+
+    <!-- <script>
+        swal("{{ message.tags|title }}", "{{ message }}", "{{ message.tags }}");
+    </script> -->
+
+    <script>
+        toastr.{{ message.tags }}('{{ message }}', '{{ message.tags|title }}');
+    </script>
+    {% endfor %}
+    {% endif %}
+</body>
+
+
+</html>
