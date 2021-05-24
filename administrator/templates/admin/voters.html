@@ -1,0 +1,139 @@
+{% extends 'root.html' %}
+{% block content %}
+<section class="content">
+  <div class="row">
+<div class="col-xs-12">
+<div class="box">
+<div class="box-header with-border">
+  <a href="#addnew" data-toggle="modal" class="btn btn-primary btn-sm btn-flat"><i
+          class="fa fa-plus"></i> New</a>
+</div>
+<div class="box-body">
+  <table id="example1" class="table table-bordered">
+      <thead>
+          <th>Lastname</th>
+          <th>Firstname</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Tools</th>
+      </thead>
+      <tbody>
+          
+<tr>
+<td>Cameron</td>
+<td>Laroza</td>
+<td>woqidasu@mailinator.com</td>
+<td>08018282828</td>
+
+<td>
+<button class='btn btn-success btn-sm edit btn-flat' data-id='4'><i class='fa fa-edit'></i> Edit</button>
+<button class='btn btn-danger btn-sm delete btn-flat' data-id='4'><i class='fa fa-trash'></i> Delete</button>
+</td>
+</tr>
+
+<tr>
+<td>Alamu</td>
+<td>Laroze</td>
+<td>laroze@gmail.com</td>
+<td>08024719978</td>
+
+<td>
+<button class='btn btn-success btn-sm edit btn-flat' data-id='5'><i class='fa fa-edit'></i> Edit</button>
+<button class='btn btn-danger btn-sm delete btn-flat' data-id='5'><i class='fa fa-trash'></i> Delete</button>
+</td>
+</tr>
+
+<tr>
+<td>Modibo</td>
+<td>Ahmad</td>
+<td>ahmad@gmail.com</td>
+<td>07036081336</td>
+
+<td>
+<button class='btn btn-success btn-sm edit btn-flat' data-id='6'><i class='fa fa-edit'></i> Edit</button>
+<button class='btn btn-danger btn-sm delete btn-flat' data-id='6'><i class='fa fa-trash'></i> Delete</button>
+</td>
+</tr>
+
+<tr>
+<td>Waller</td>
+<td>Felicia</td>
+<td>pumyzafe@mailinator.com</td>
+<td>08100134749</td>
+
+<td>
+<button class='btn btn-success btn-sm edit btn-flat' data-id='7'><i class='fa fa-edit'></i> Edit</button>
+<button class='btn btn-danger btn-sm delete btn-flat' data-id='7'><i class='fa fa-trash'></i> Delete</button>
+</td>
+</tr>
+
+<tr>
+<td>Owonubi</td>
+<td>Job</td>
+<td>jobowonubi@gmail.com</td>
+<td>08100134741</td>
+
+<td>
+<button class='btn btn-success btn-sm edit btn-flat' data-id='8'><i class='fa fa-edit'></i> Edit</button>
+<button class='btn btn-danger btn-sm delete btn-flat' data-id='8'><i class='fa fa-trash'></i> Delete</button>
+</td>
+</tr>
+                            </tbody>
+  </table>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+{% endblock content %}
+
+{% block modal %}
+<div class="modal fade" id="addnew">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><b>Add New Voter</b></h4>
+          </div>
+          <div class="modal-body">
+            <form class="form-horizontal" method="POST" action="voters_add.php" enctype="multipart/form-data">
+              <div class="form-group">
+                  <label for="firstname" class="col-sm-3 control-label">Firstname</label>
+
+                  <div class="col-sm-9">
+                    <input type="text" class="form-control" id="firstname" name="firstname" required>
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label for="lastname" class="col-sm-3 control-label">Lastname</label>
+
+                  <div class="col-sm-9">
+                    <input type="text" class="form-control" id="lastname" name="lastname" required>
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label for="password" class="col-sm-3 control-label">Password</label>
+
+                  <div class="col-sm-9">
+                    <input type="password" class="form-control" id="password" name="password" required>
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label for="photo" class="col-sm-3 control-label">Photo</label>
+
+                  <div class="col-sm-9">
+                    <input type="file" id="photo" name="photo">
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+            <button type="submit" class="btn btn-primary btn-flat" name="add"><i class="fa fa-save"></i> Save</button>
+            </form>
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock modal %}

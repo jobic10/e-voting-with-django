@@ -1,0 +1,48 @@
+<header class="main-header">
+  <!-- Logo -->
+  <a href="{% url 'adminDashboard' %}" class="logo">
+    <!-- mini logo for sidebar mini 50x50 pixels -->
+    <span class="logo-mini"><b>C</b>P</span>
+    <!-- logo for regular state and mobile devices -->
+    <span class="logo-lg"><b>Voting System </span>
+  </a>
+  <!-- Header Navbar: style can be found in header.less -->
+  <nav class="navbar navbar-static-top">
+    <!-- Sidebar toggle button-->
+    <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+      <span class="sr-only">Toggle navigation</span>
+    </a>
+
+    <div class="navbar-custom-menu">
+      <ul class="nav navbar-nav">
+        <!-- User Account: style can be found in dropdown.less -->
+        <li class="dropdown user user-menu">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            <img src="../images/facebook-profile-image.jpeg" class="user-image" alt="User Image">
+            <span class="hidden-xs">System Administrator</span>
+          </a>
+          <ul class="dropdown-menu">
+            <!-- User image -->
+            <li class="user-header">
+              <img src="../images/facebook-profile-image.jpeg" class="img-circle" alt="User Image">
+
+              <p>
+                System Administrator                <small>Member since Mar. 2021</small>
+              </p>
+            </li>
+            <li class="user-footer">
+              <div class="pull-left">
+                <a href="#profile" data-toggle="modal" class="btn btn-default btn-flat" id="admin_profile">Update</a>
+              </div>
+              <div class="pull-right">
+                <a href="{% url 'account_logout' %}" class="btn btn-default btn-flat">Sign out</a>
+              </div>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</header>
+ 
+{% include "bio.html" %}
