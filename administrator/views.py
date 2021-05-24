@@ -1,8 +1,8 @@
 from django.shortcuts import render, reverse, redirect
-from voting.models import Voter
+from voting.models import Voter, Position
 from account.models import CustomUser
 from account.forms import CustomUserForm
-from voting.forms import VoterForm
+from voting.forms import VoterForm, PositionForm
 from django.contrib import messages
 from django.http import JsonResponse
 # Create your views here.
@@ -52,6 +52,21 @@ def view_voter_by_id(request):
     return JsonResponse(context)
 
 
+def view_position_by_id(request):
+    pos_id = request.GET.get('id', None)
+    pos = Position.objects.filter(id=pos_id)
+    context = {}
+    if not pos.exists():
+        context['code'] = 404
+    else:
+        context['code'] = 200
+        pos = pos[0]
+        context['name'] = pos.name
+        context['max_vote'] = pos.max_vote
+        context['id'] = pos.id
+    return JsonResponse(context)
+
+
 def updateVoter(request):
     if request.method != 'POST':
         messages.error(request, "Access Denied")
@@ -79,3 +94,48 @@ def deleteVoter(request):
         messages.error(request, "Access To This Resource Denied")
 
     return redirect(reverse('adminViewVoters'))
+
+
+def viewPositions(request):
+    positions = Position.objects.order_by('-priority').all()
+    form = PositionForm(request.POST or None)
+    context = {
+        'positions': positions,
+        'form1': form
+    }
+    if request.method == 'POST':
+        if form.is_valid():
+            form = form.save(commit=False)
+            form.priority = positions.count() + 1  # Just in case it is empty.
+            form.save()
+            messages.success(request, "New Position Created")
+        else:
+            messages.error(request, "Form errors")
+    return render(request, "admin/positions.html", context)
+
+
+def updatePosition(request):
+    if request.method != 'POST':
+        messages.error(request, "Access Denied")
+    try:
+        instance = Position.objects.get(id=request.POST.get('id'))
+        pos = PositionForm(request.POST or None, instance=instance)
+        pos.save()
+        messages.success(request, "Position has been updated")
+    except:
+        messages.error(request, "Access To This Resource Denied")
+
+    return redirect(reverse('viewPositions'))
+
+
+def deletePosition(request):
+    if request.method != 'POST':
+        messages.error(request, "Access Denied")
+    try:
+        pos = Position.objects.get(id=request.POST.get('id'))
+        pos.delete()
+        messages.success(request, "Position Has Been Deleted")
+    except:
+        messages.error(request, "Access To This Resource Denied")
+
+    return redirect(reverse('viewPositions'))

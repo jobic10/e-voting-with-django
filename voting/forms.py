@@ -7,3 +7,9 @@ class VoterForm(FormSettings):
     class Meta:
         model = Voter
         fields = ['phone']
+
+
+class PositionForm(FormSettings):
+    class Meta:
+        model = Position
+        fields = ['name', 'max_vote']
