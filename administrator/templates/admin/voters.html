@@ -27,8 +27,8 @@
       <td>{{ voter.phone }}</td>
       
       <td>
-        <button class='btn btn-success btn-sm edit btn-flat' data-id='4'><i class='fa fa-edit'></i> Edit</button>
-        <button class='btn btn-danger btn-sm delete btn-flat' data-id='4'><i class='fa fa-trash'></i> Delete</button>
+        <button class='btn btn-success btn-sm edit btn-flat' data-id='{{ voter.id }}'><i class='fa fa-edit'></i> Edit</button>
+        <button class='btn btn-danger btn-sm delete btn-flat' data-id='{{ voter.id }}'><i class='fa fa-trash'></i> Delete</button>
       </td>
     </tr>
     {% endfor %}      
@@ -78,9 +78,130 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
             <button type="submit" class="btn btn-primary btn-flat" name="add"><i class="fa fa-save"></i> Save</button>
+          </div></form></div></div></div></div>
+
+<!-- Edit -->
+<div class="modal fade" id="edit">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><b>Edit Voter</b></h4>
+          </div>
+          <div class="modal-body">
+            <form class="form-horizontal" method="POST" action="{% url 'updateVoter' %}">
+              {% csrf_token %}
+              <input type="hidden" class="id" name="id">
+              <div class="form-group">
+                  <label for="edit_firstname" class="col-sm-3 control-label">Firstname</label>
+
+                  <div class="col-sm-9">
+                    <input type="text" class="form-control" id="edit_firstname" name="first_name">
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label for="edit_lastname" class="col-sm-3 control-label">Lastname</label>
+
+                  <div class="col-sm-9">
+                    <input type="text" class="form-control" id="edit_lastname" name="last_name">
+                  </div>
+              </div>
+              <div class="form-group">
+                <label for="edit_email" class="col-sm-3 control-label">Email</label>
+
+                <div class="col-sm-9">
+                  <input type="email" class="form-control" id="edit_email" name="email">
+                </div>
+            </div>
+            <div class="form-group">
+              <label for="edit_phone" class="col-sm-3 control-label">Phone</label>
+
+              <div class="col-sm-9">
+                <input type="text" class="form-control" id="edit_phone" name="phone">
+              </div>
+          </div> 
+
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+            <button type="submit" class="btn btn-success btn-flat" name="edit"><i class="fa fa-check-square-o"></i> Update</button>
             </form>
           </div>
       </div>
   </div>
 </div>
+
+<!-- Delete -->
+<div class="modal fade" id="delete">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><b>Deleting...</b></h4>
+          </div>
+          <div class="modal-body">
+            <form class="form-horizontal" method="POST" action="voters_delete.php">
+              <input type="hidden" class="id" name="id">
+              <div class="text-center">
+                  <p>DELETE VOTER</p>
+                  <h2 class="bold fullname"></h2>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+            <button type="submit" class="btn btn-danger btn-flat" name="delete"><i class="fa fa-trash"></i> Delete</button>
+            </form>
+          </div>
+      </div>
+  </div>
+</div>
+
 {% endblock modal %}
+
+
+
+{% block custom_js %}
+  
+<script>
+  $(function() {
+      $(document).on('click', '.edit', function(e) {
+          e.preventDefault();
+          $('#edit').modal('show');
+          var id = $(this).data('id');
+          getRow(id);
+      });
+
+      $(document).on('click', '.delete', function(e) {
+          e.preventDefault();
+          $('#delete').modal('show');
+          var id = $(this).data('id');
+          getRow(id);
+      });
+
+
+  });
+
+  function getRow(id) {
+      $.ajax({
+          type: 'GET',
+          url: '{% url "viewVoter" %}',
+          data: {
+              id: id
+          },
+          dataType: 'json',
+          success: function(response) {
+              $('.id').val(response.id);
+              $('#edit_firstname').val(response.first_name);
+              $('#edit_lastname').val(response.last_name);
+              $('#edit_phone').val(response.phone);
+              $('#edit_email').val(response.email);
+              $('.fullname').html(response.first_name + ' ' + response.last_name);
+          }
+      });
+  }
+  </script>
+{% endblock custom_js %}
+  

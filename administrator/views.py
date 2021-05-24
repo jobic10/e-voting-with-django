@@ -1,8 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, reverse, redirect
 from voting.models import Voter
+from account.models import CustomUser
 from account.forms import CustomUserForm
 from voting.forms import VoterForm
 from django.contrib import messages
+from django.http import JsonResponse
 # Create your views here.
 
 
@@ -31,3 +33,36 @@ def voters(request):
         else:
             messages.error(request, "Form validation failed")
     return render(request, "admin/voters.html", context)
+
+
+def view_voter_by_id(request):
+    voter_id = request.GET.get('id', None)
+    voter = Voter.objects.filter(id=voter_id)
+    context = {}
+    if not voter.exists():
+        context['code'] = 404
+    else:
+        context['code'] = 200
+        voter = voter[0]
+        context['first_name'] = voter.admin.first_name
+        context['last_name'] = voter.admin.last_name
+        context['phone'] = voter.phone
+        context['id'] = voter.id
+        context['email'] = voter.admin.email
+    return JsonResponse(context)
+
+
+def updateVoter(request):
+    if request.method != 'POST':
+        messages.error(request, "Access Denied")
+    try:
+        instance = Voter.objects.get(id=request.POST.get('id'))
+        user = CustomUserForm(request.POST or None, instance=instance.admin)
+        voter = VoterForm(request.POST or None, instance=instance)
+        user.save()
+        voter.save()
+        messages.success(request, "Voter's bio updated")
+    except:
+        messages.error(request, "Access To This Resource Denied")
+
+    return redirect(reverse('adminViewVoters'))
