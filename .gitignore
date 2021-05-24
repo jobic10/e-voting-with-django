@@ -137,3 +137,4 @@ db.sqlite3
 media/
 voting/migrations/*
 account/migrations/*
+static/
