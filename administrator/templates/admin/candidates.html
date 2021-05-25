@@ -85,7 +85,7 @@
           <div class="modal-body">
             <form class="form-horizontal" enctype="multipart/form-data" method="POST" action="{% url 'updateCandidate' %}">
               {% csrf_token %}
-              <input type="text" class="id" name="id">
+              <input type="hidden" class="id" name="id">
               <p class="display_form">
                 
               </p>
@@ -164,6 +164,7 @@
           success: function(response) {
             $('.id').val(id),
               $('.display_form').html(response.form);
+              $('.fullname').html(response.fullname);
           },
          
       });

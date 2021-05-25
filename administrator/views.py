@@ -186,7 +186,7 @@ def deleteCandidate(request):
     except:
         messages.error(request, "Access To This Resource Denied")
 
-    return redirect(reverse('viewCandidate'))
+    return redirect(reverse('viewCandidates'))
 
 
 def view_candidate_by_id(request):
@@ -198,6 +198,7 @@ def view_candidate_by_id(request):
     else:
         candidate = candidate[0]
         context['code'] = 200
+        context['fullname'] = candidate.fullname
         previous = CandidateForm(instance=candidate)
         context['form'] = str(previous.as_p())
     return JsonResponse(context)
