@@ -11,22 +11,24 @@
 <div class="box-body">
   <table id="example1" class="table table-bordered">
       <thead>
-          <th>Name</th>
-          <th>Maximum Votes</th>
-          <th>Priority</th>
+          <th>Full Name</th>
+          <th>Position</th>
+          <th>Bio</th>
+          <th>Avatar</th>
           <th>Action</th>
       </thead>
       <tbody>
-    {% for position in positions %}
+    {% for candidate in candidates %}
       
     <tr>
-      <td>{{ position.name }}</td>
-      <td>{{ position.max_vote }}</td>
-      <td>{{ position.priority }}</td>
+      <td>{{ candidate.fullname }}</td>
+      <td>{{ candidate.position }}</td>
+      <td>{{ candidate.bio }}</td>
+      <td><img src="/media/{{ candidate.photo }}" width="80" height="80" alt="{{ candidate.fullname }}'s Avatar" class="img img-fluid"></td>
       
       <td>
-        <button class='btn btn-success btn-sm edit btn-flat' data-id='{{ position.id }}'><i class='fa fa-edit'></i> Edit</button>
-        <button class='btn btn-danger btn-sm delete btn-flat' data-id='{{ position.id }}'><i class='fa fa-trash'></i> Delete</button>
+        <button class='btn btn-success btn-sm edit btn-flat' data-id='{{ candidate.id }}'><i class='fa fa-edit'></i> Edit</button>
+        <button class='btn btn-danger btn-sm delete btn-flat' data-id='{{ candidate.id }}'><i class='fa fa-trash'></i> Delete</button>
       </td>
     </tr>
     {% endfor %}      
@@ -48,10 +50,10 @@
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title"><b>Add New Position</b></h4>
+            <h4 class="modal-title"><b>Add New Candidate</b></h4>
           </div>
           <div class="modal-body">
-            <form class="form-horizontal" method="POST" action="{% url 'viewPositions' %}">
+            <form class="form-horizontal" enctype="multipart/form-data" method="POST" action="{% url 'viewCandidates' %}">
               {% csrf_token %}
 
              
@@ -78,29 +80,16 @@
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title"><b>Edit Position</b></h4>
+            <h4 class="modal-title"><b>Edit Candidate</b></h4>
           </div>
           <div class="modal-body">
-            <form class="form-horizontal" method="POST" action="{% url 'updatePosition' %}">
+            <form class="form-horizontal" enctype="multipart/form-data" method="POST" action="{% url 'updateCandidate' %}">
               {% csrf_token %}
-              <input type="hidden" class="id" name="id">
-              <div class="form-group">
-                <label for="name" class="col-sm-3 control-label">Name</label>
-
-                <div class="col-sm-9">
-                  <input type="text" class="form-control" id="name" name="name">
-                </div>
-            </div>
-
-            <div class="form-group">
-              <label for="max_vote" class="col-sm-3 control-label">Maximum Number of Votes</label>
-
-              <div class="col-sm-9">
-                <input type="text" class="form-control" id="max_vote" name="max_vote">
-              </div>
-          </div>
-             
-
+              <input type="text" class="id" name="id">
+              <p class="display_form">
+                
+              </p>
+              
 
           </div>
           <div class="modal-footer">
@@ -122,11 +111,11 @@
             <h4 class="modal-title"><b>Deleting...</b></h4>
           </div>
           <div class="modal-body">
-            <form class="form-horizontal" method="POST" action="{% url 'deletePosition' %}">
+            <form class="form-horizontal" method="POST" action="{% url 'deleteCandidate' %}">
               <input type="hidden" class="id" name="id">
               {% csrf_token %}
               <div class="text-center">
-                  <p>DELETE POSITION</p>
+                  <p>DELETE CANDIDATE</p>
                   <h2 class="bold fullname"></h2>
               </div>
           </div>
@@ -167,17 +156,16 @@
   function getRow(id) {
       $.ajax({
           type: 'GET',
-          url: '{% url "viewPosition" %}',
+          url: '{% url "viewCandidate" %}',
           data: {
               id: id
           },
           dataType: 'json',
           success: function(response) {
-              $('.id').val(response.id);
-              $('#max_vote').val(response.max_vote);
-              $('#name').val(response.name);
-              $('.fullname').html(response.name);
-          }
+            $('.id').val(id),
+              $('.display_form').html(response.form);
+          },
+         
       });
   }
   </script>

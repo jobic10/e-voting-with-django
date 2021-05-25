@@ -1,10 +1,10 @@
 from django.shortcuts import render, reverse, redirect
-from voting.models import Voter, Position
+from voting.models import Voter, Position, Candidate
 from account.models import CustomUser
 from account.forms import CustomUserForm
-from voting.forms import VoterForm, PositionForm
+from voting.forms import *
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 # Create your views here.
 
 
@@ -139,3 +139,65 @@ def deletePosition(request):
         messages.error(request, "Access To This Resource Denied")
 
     return redirect(reverse('viewPositions'))
+
+
+def viewCandidates(request):
+    candidates = Candidate.objects.all()
+    form = CandidateForm(request.POST or None, request.FILES or None)
+    context = {
+        'candidates': candidates,
+        'form1': form
+    }
+    if request.method == 'POST':
+        if form.is_valid():
+            form = form.save()
+            messages.success(request, "New Candidate Created")
+        else:
+            messages.error(request, "Form errors")
+    return render(request, "admin/candidates.html", context)
+
+
+def updateCandidate(request):
+    if request.method != 'POST':
+        messages.error(request, "Access Denied")
+    try:
+        candidate_id = request.POST.get('id')
+        candidate = Candidate.objects.get(id=candidate_id)
+        form = CandidateForm(request.POST or None,
+                             request.FILES or None, instance=candidate)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Candidate Data Updated")
+        else:
+            messages.error(request, "Form has errors")
+    except:
+        messages.error(request, "Access To This Resource Denied")
+
+    return redirect(reverse('viewCandidates'))
+
+
+def deleteCandidate(request):
+    if request.method != 'POST':
+        messages.error(request, "Access Denied")
+    try:
+        pos = Candidate.objects.get(id=request.POST.get('id'))
+        pos.delete()
+        messages.success(request, "Candidate Has Been Deleted")
+    except:
+        messages.error(request, "Access To This Resource Denied")
+
+    return redirect(reverse('viewCandidate'))
+
+
+def view_candidate_by_id(request):
+    candidate_id = request.GET.get('id', None)
+    candidate = Candidate.objects.filter(id=candidate_id)
+    context = {}
+    if not candidate.exists():
+        context['code'] = 404
+    else:
+        candidate = candidate[0]
+        context['code'] = 200
+        previous = CandidateForm(instance=candidate)
+        context['form'] = str(previous.as_p())
+    return JsonResponse(context)

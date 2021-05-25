@@ -16,6 +16,9 @@ class Position(models.Model):
     max_vote = models.IntegerField()
     priority = models.IntegerField()
 
+    def __str__(self):
+        return self.name
+
 
 class Candidate(models.Model):
     fullname = models.CharField(max_length=50)
