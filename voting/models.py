@@ -8,7 +8,11 @@ class Voter(models.Model):
     phone = models.CharField(max_length=11, unique=True)  # Used for OTP
     otp = models.CharField(max_length=10, null=True)
     verified = models.IntegerField(default=1)
+    voted = models.IntegerField(default=0)  # 0 means voter has not voted
     # Will later limit how many OTPs are sent
+
+    def __str__(self):
+        return self.admin.last_name + ", " + self.admin.first_name
 
 
 class Position(models.Model):
@@ -25,3 +29,12 @@ class Candidate(models.Model):
     photo = models.ImageField(upload_to="candidates")
     bio = models.TextField()
     position = models.ForeignKey(Position, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.fullname
+
+
+class Votes(models.Model):
+    voter = models.ForeignKey(Voter, on_delete=models.CASCADE)
+    position = models.ForeignKey(Position, on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)

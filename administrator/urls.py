@@ -30,6 +30,8 @@ urlpatterns = [
 
     # * Votes
     path('votes/view', views.viewVotes, name='viewVotes'),
+    path('votes/reset/', views.resetVote, name='resetVote'),
+
 
 
 ]

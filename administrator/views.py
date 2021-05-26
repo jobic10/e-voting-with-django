@@ -1,16 +1,46 @@
 from django.shortcuts import render, reverse, redirect
-from voting.models import Voter, Position, Candidate
+from voting.models import Voter, Position, Candidate, Votes
 from account.models import CustomUser
 from account.forms import CustomUserForm
 from voting.forms import *
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
+import json
 # Create your views here.
 
 
 def dashboard(request):
-    context = {}
+    positions = Position.objects.all()
+    candidates = Candidate.objects.all()
+    voters = Voter.objects.all()
+    voted_voters = Voter.objects.filter(voted=1)
+    list_of_candidates = []
+    votes_count = []
+    chart_data = {}
+
+    for position in positions:
+        list_of_candidates = []
+        votes_count = []
+        for candidate in Candidate.objects.filter(position=position):
+            list_of_candidates.append(candidate.fullname)
+            votes = Votes.objects.filter(candidate=candidate).count()
+            votes_count.append(votes)
+        chart_data[position] = {
+            'candidates': list_of_candidates,
+            'votes': votes_count,
+            'pos_id': position.id
+        }
+
+    print(chart_data)
+    context = {
+        'position_count': positions.count(),
+        'candidate_count': candidates.count(),
+        'voters_count': voters.count(),
+        'voted_voters_count': voted_voters.count(),
+        'positions': positions,
+        'chart_data': chart_data
+    }
     return render(request, "admin/home.html", context)
 
 
@@ -265,3 +295,18 @@ def ballot_title(request):
     except Exception as e:
         messages.error(request, e)
         return redirect("/")
+
+
+def viewVotes(request):
+    votes = Votes.objects.all()
+    context = {
+        'votes': votes
+    }
+    return render(request, "admin/votes.html", context)
+
+
+def resetVote(request):
+    Votes.objects.all().delete()
+    Voter.objects.all().update(voted=0)
+    messages.success(request, "All votes has been reset")
+    return redirect(reverse('viewVotes'))

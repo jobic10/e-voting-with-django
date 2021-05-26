@@ -73,59 +73,30 @@
         </div>
       </div>
 
-      <div class='row'>
-            <div class='col-sm-6'>
-              <div class='box box-solid'>
-                <div class='box-header with-border'>
-                  <h4 class='box-title'><b>President</b></h4>
-                </div>
-                <div class='box-body'>
-                  <div class='chart'>
-                    <canvas id='president' style='height:200px'></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-          
-            <div class='col-sm-6'>
-              <div class='box box-solid'>
-                <div class='box-header with-border'>
-                  <h4 class='box-title'><b>Vice-President</b></h4>
-                </div>
-                <div class='box-body'>
-                  <div class='chart'>
-                    <canvas id='vice-president' style='height:200px'></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div><div class='row'>
-            <div class='col-sm-6'>
-              <div class='box box-solid'>
-                <div class='box-header with-border'>
-                  <h4 class='box-title'><b>Treasurer</b></h4>
-                </div>
-                <div class='box-body'>
-                  <div class='chart'>
-                    <canvas id='treasurer' style='height:200px'></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-          
-            <div class='col-sm-6'>
-              <div class='box box-solid'>
-                <div class='box-header with-border'>
-                  <h4 class='box-title'><b>PRO</b></h4>
-                </div>
-                <div class='box-body'>
-                  <div class='chart'>
-                    <canvas id='pro' style='height:200px'></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
+     {% for position in positions %}
+     {% if not forloop.counter|divisibleby:2 %}
+     <div class='row'>
+     {% endif %}
+     <div class='col-sm-6'>
+      <div class='box box-solid'>
+        <div class='box-header with-border'>
+          <h4 class='box-title'><b>{{ position.name }}</b></h4>
+        </div>
+        <div class='box-body'>
+          <div class='chart'>
+            <canvas id='{{ position.name|slugify }}' style='height:200px'></canvas>
           </div>
+        </div>
+      </div>
+    </div>
+    {% if forloop.counter|divisibleby:2 %}
+     </div>
+     {% endif %}
+
+     {% endfor %}
+     {% if not forloop.counter|divisibleby:2 %}
+     </div>
+     {% endif %}
       </section>
       
       {% endblock content %}
@@ -135,218 +106,64 @@
       <script src="{% static 'bower_components/chart.js/Chart.js' %}"></script>
 <!-- ChartJS Horizontal Bar -->
 <script src="{% static 'bower_components/chart.js/Chart.HorizontalBar.js' %}"></script>
-      <script>
-        $(function(){
-          var rowid = '9';
-          var description = 'president';
-          var barChartCanvas = $('#'+description).get(0).getContext('2d')
-          var barChart = new Chart(barChartCanvas)
-          var barChartData = {
-            labels  : ["Golden","Ope"],
-            datasets: [
-              {
-                label               : 'Votes',
-                fillColor           : 'rgba(60,141,188,0.9)',
-                strokeColor         : 'rgba(60,141,188,0.8)',
-                pointColor          : '#3b8bba',
-                pointStrokeColor    : 'rgba(60,141,188,1)',
-                pointHighlightFill  : '#fff',
-                pointHighlightStroke: 'rgba(60,141,188,1)',
-                data                : [3,0]          }
-            ]
-          }
-          var barChartOptions                  = {
-            //Boolean - Whether the scale should start at zero, or an order of magnitude down from the lowest value
-            scaleBeginAtZero        : true,
-            //Boolean - Whether grid lines are shown across the chart
-            scaleShowGridLines      : true,
-            //String - Colour of the grid lines
-            scaleGridLineColor      : 'rgba(0,0,0,.05)',
-            //Number - Width of the grid lines
-            scaleGridLineWidth      : 1,
-            //Boolean - Whether to show horizontal lines (except X axis)
-            scaleShowHorizontalLines: true,
-            //Boolean - Whether to show vertical lines (except Y axis)
-            scaleShowVerticalLines  : true,
-            //Boolean - If there is a stroke on each bar
-            barShowStroke           : true,
-            //Number - Pixel width of the bar stroke
-            barStrokeWidth          : 2,
-            //Number - Spacing between each of the X value sets
-            barValueSpacing         : 5,
-            //Number - Spacing between data sets within X values
-            barDatasetSpacing       : 1,
-            //String - A legend template
-                    legendTemplate          : '---I Skipped This, Too---',
+      
+{% for key, value in chart_data.items  %}
+<script>
+  $(function() {
+    var rowid = '{{ value.pos_id }}';
+    var description = '{{ key|safe|slugify }}';
+    var barChartCanvas = $('#' + description).get(0).getContext('2d')
+    var barChart = new Chart(barChartCanvas)
+    var barChartData = {
+      labels: {{ value.candidates|safe }},
+      datasets: [{
+        label: 'Votes',
+        fillColor: 'rgba(60,141,188,0.9)',  
+        strokeColor: 'rgba(60,141,188,0.8)',
+        pointColor: '#3b8bba',
+        pointStrokeColor: 'rgba(60,141,188,1)',
+        pointHighlightFill: '#fff',
+        pointHighlightStroke: 'rgba(60,141,188,1)',
+        data: {{ value.votes|safe }}
+      }]
+    }
+    var barChartOptions = {
+      //Boolean - Whether the scale should start at zero, or an order of magnitude down from the lowest value
+      scaleBeginAtZero: true,
+      //Boolean - Whether grid lines are shown across the chart
+      scaleShowGridLines: true,
+      //String - Colour of the grid lines
+      scaleGridLineColor: 'rgba(0,0,0,.05)',
+      //Number - Width of the grid lines
+      scaleGridLineWidth: 1,
+      //Boolean - Whether to show horizontal lines (except X axis)
+      scaleShowHorizontalLines: true,
+      //Boolean - Whether to show vertical lines (except Y axis)
+      scaleShowVerticalLines: true,
+      //Boolean - If there is a stroke on each bar
+      barShowStroke: true,
+      //Number - Pixel width of the bar stroke
+      barStrokeWidth: 2,
+      //Number - Spacing between each of the X value sets
+      barValueSpacing: 5,
+      //Number - Spacing between data sets within X values
+      barDatasetSpacing: 1,
+      //String - A legend template
+     {% comment %}
+       
+     legendTemplate: '<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].fillColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>', //! Take note*/
+     
+     {% endcomment %}
+      //Boolean - whether to make the chart responsive
+      responsive: true,
+      maintainAspectRatio: true
+    }
 
-            //Boolean - whether to make the chart responsive
-            responsive              : true,
-            maintainAspectRatio     : true
-          }
-    
-          barChartOptions.datasetFill = false
-          var myChart = barChart.HorizontalBar(barChartData, barChartOptions)
-          //document.getElementById('legend_'+rowid).innerHTML = myChart.generateLegend();
-        });
-        </script>
-            <script>
-        $(function(){
-          var rowid = '10';
-          var description = 'vice-president';
-          var barChartCanvas = $('#'+description).get(0).getContext('2d')
-          var barChart = new Chart(barChartCanvas)
-          var barChartData = {
-            labels  : ["GeeBee","Bamijoko"],
-            datasets: [
-              {
-                label               : 'Votes',
-                fillColor           : 'rgba(60,141,188,0.9)',
-                strokeColor         : 'rgba(60,141,188,0.8)',
-                pointColor          : '#3b8bba',
-                pointStrokeColor    : 'rgba(60,141,188,1)',
-                pointHighlightFill  : '#fff',
-                pointHighlightStroke: 'rgba(60,141,188,1)',
-                data                : [2,1]          }
-            ]
-          }
-          var barChartOptions                  = {
-            //Boolean - Whether the scale should start at zero, or an order of magnitude down from the lowest value
-            scaleBeginAtZero        : true,
-            //Boolean - Whether grid lines are shown across the chart
-            scaleShowGridLines      : true,
-            //String - Colour of the grid lines
-            scaleGridLineColor      : 'rgba(0,0,0,.05)',
-            //Number - Width of the grid lines
-            scaleGridLineWidth      : 1,
-            //Boolean - Whether to show horizontal lines (except X axis)
-            scaleShowHorizontalLines: true,
-            //Boolean - Whether to show vertical lines (except Y axis)
-            scaleShowVerticalLines  : true,
-            //Boolean - If there is a stroke on each bar
-            barShowStroke           : true,
-            //Number - Pixel width of the bar stroke
-            barStrokeWidth          : 2,
-            //Number - Spacing between each of the X value sets
-            barValueSpacing         : 5,
-            //Number - Spacing between data sets within X values
-            barDatasetSpacing       : 1,
-            //String - A legend template
-            legendTemplate          : '---I Skipped This, Too---',
+    barChartOptions.datasetFill = false
+    var myChart = barChart.HorizontalBar(barChartData, barChartOptions)
+    //document.getElementById('legend_'+rowid).innerHTML = myChart.generateLegend();
+  });
+</script>
+{% endfor %}
 
-            //Boolean - whether to make the chart responsive
-            responsive              : true,
-            maintainAspectRatio     : true
-          }
-    
-          barChartOptions.datasetFill = false
-          var myChart = barChart.HorizontalBar(barChartData, barChartOptions)
-          //document.getElementById('legend_'+rowid).innerHTML = myChart.generateLegend();
-        });
-        </script>
-            <script>
-        $(function(){
-          var rowid = '11';
-          var description = 'treasurer';
-          var barChartCanvas = $('#'+description).get(0).getContext('2d')
-          var barChart = new Chart(barChartCanvas)
-          var barChartData = {
-            labels  : [],
-            datasets: [
-              {
-                label               : 'Votes',
-                fillColor           : 'rgba(60,141,188,0.9)',
-                strokeColor         : 'rgba(60,141,188,0.8)',
-                pointColor          : '#3b8bba',
-                pointStrokeColor    : 'rgba(60,141,188,1)',
-                pointHighlightFill  : '#fff',
-                pointHighlightStroke: 'rgba(60,141,188,1)',
-                data                : []          }
-            ]
-          }
-          var barChartOptions                  = {
-            //Boolean - Whether the scale should start at zero, or an order of magnitude down from the lowest value
-            scaleBeginAtZero        : true,
-            //Boolean - Whether grid lines are shown across the chart
-            scaleShowGridLines      : true,
-            //String - Colour of the grid lines
-            scaleGridLineColor      : 'rgba(0,0,0,.05)',
-            //Number - Width of the grid lines
-            scaleGridLineWidth      : 1,
-            //Boolean - Whether to show horizontal lines (except X axis)
-            scaleShowHorizontalLines: true,
-            //Boolean - Whether to show vertical lines (except Y axis)
-            scaleShowVerticalLines  : true,
-            //Boolean - If there is a stroke on each bar
-            barShowStroke           : true,
-            //Number - Pixel width of the bar stroke
-            barStrokeWidth          : 2,
-            //Number - Spacing between each of the X value sets
-            barValueSpacing         : 5,
-            //Number - Spacing between data sets within X values
-            barDatasetSpacing       : 1,
-            //String - A legend template
-            legendTemplate          : '---I Skipped This---',
-            //Boolean - whether to make the chart responsive
-            responsive              : true,
-            maintainAspectRatio     : true
-          }
-    
-          barChartOptions.datasetFill = false
-          var myChart = barChart.HorizontalBar(barChartData, barChartOptions)
-          //document.getElementById('legend_'+rowid).innerHTML = myChart.generateLegend();
-        });
-        </script>
-            <script>
-        $(function(){
-          var rowid = '12';
-          var description = 'pro';
-          var barChartCanvas = $('#'+description).get(0).getContext('2d')
-          var barChart = new Chart(barChartCanvas)
-          var barChartData = {
-            labels  : [],
-            datasets: [
-              {
-                label               : 'Votes',
-                fillColor           : 'rgba(60,141,188,0.9)',
-                strokeColor         : 'rgba(60,141,188,0.8)',
-                pointColor          : '#3b8bba',
-                pointStrokeColor    : 'rgba(60,141,188,1)',
-                pointHighlightFill  : '#fff',
-                pointHighlightStroke: 'rgba(60,141,188,1)',
-                data                : []          }
-            ]
-          }
-          var barChartOptions                  = {
-            //Boolean - Whether the scale should start at zero, or an order of magnitude down from the lowest value
-            scaleBeginAtZero        : true,
-            //Boolean - Whether grid lines are shown across the chart
-            scaleShowGridLines      : true,
-            //String - Colour of the grid lines
-            scaleGridLineColor      : 'rgba(0,0,0,.05)',
-            //Number - Width of the grid lines
-            scaleGridLineWidth      : 1,
-            //Boolean - Whether to show horizontal lines (except X axis)
-            scaleShowHorizontalLines: true,
-            //Boolean - Whether to show vertical lines (except Y axis)
-            scaleShowVerticalLines  : true,
-            //Boolean - If there is a stroke on each bar
-            barShowStroke           : true,
-            //Number - Pixel width of the bar stroke
-            barStrokeWidth          : 2,
-            //Number - Spacing between each of the X value sets
-            barValueSpacing         : 5,
-            //Number - Spacing between data sets within X values
-            barDatasetSpacing       : 1,
-            //String - A legend template
-            legendTemplate          : '---I Skipped This, Too---',
-            //Boolean - whether to make the chart responsive
-            responsive              : true,
-            maintainAspectRatio     : true
-          }
-    
-          barChartOptions.datasetFill = false
-          var myChart = barChart.HorizontalBar(barChartData, barChartOptions)
-          //document.getElementById('legend_'+rowid).innerHTML = myChart.generateLegend();
-        });
-        </script>
-      {% endblock custom_js %}
+{% endblock custom_js %}
