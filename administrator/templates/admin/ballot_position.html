@@ -1,0 +1,76 @@
+{% extends 'root.html' %}
+{% block content %}
+<section class="content">
+  <div class="row">
+    <div class="col-xs-10 col-xs-offset-1" id="content">
+    </div>
+  </div>
+</section>
+
+{% endblock content %}
+
+
+
+{% block custom_js %}
+  
+<script>
+  $(function(){
+    fetch();
+  
+    $(document).on('click', '.reset', function(e){
+      e.preventDefault();
+      var desc = $(this).data('desc');
+      $('.'+desc).iCheck('uncheck');
+    });
+  
+    $(document).on('click', '.moveup', function(e){
+      e.preventDefault();
+      var id = $(this).data('id');
+      $('#'+id).animate({
+        'marginTop' : "-300px"
+      });
+      $.ajax({
+        type: 'GET',
+        url: '{% url "update_ballot_position" 1 "up" %}'.replace(1, id),
+        dataType: 'json',
+        success: function(response){
+          if(!response.error){
+            fetch();
+          }
+        }
+      });
+    });
+  
+    $(document).on('click', '.movedown', function(e){
+      e.preventDefault();
+      var id = $(this).data('id');
+      $('#'+id).animate({
+        'marginTop' : "+300px"
+      });
+      $.ajax({
+        type: 'GET',
+        url:  '{% url "update_ballot_position" 1 "down" %}'.replace(1, id),
+        dataType: 'json',
+        success: function(response){
+          if(!response.error){
+            fetch();
+          }
+        }
+      });
+    });
+  
+  });
+  
+  function fetch(){
+    $.ajax({
+      type: 'GET',
+      url: '{% url "fetch_ballot" %}',
+      dataType: 'json',
+      success: function(response){
+        $('#content').html(response).iCheck({checkboxClass: 'icheckbox_flat-green',radioClass: 'iradio_flat-green'});
+      }
+    });
+  }
+  </script>
+{% endblock custom_js %}
+  
