@@ -11,7 +11,7 @@ import json
 
 
 def dashboard(request):
-    positions = Position.objects.all()
+    positions = Position.objects.all().order_by('priority')
     candidates = Candidate.objects.all()
     voters = Voter.objects.all()
     voted_voters = Voter.objects.filter(voted=1)
