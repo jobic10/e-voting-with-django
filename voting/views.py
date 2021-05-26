@@ -20,16 +20,18 @@ def fetch_ballot(request):
     num = 1
     # return None
     for position in positions:
+        name = position.name
+        position_name = slugify(name)
         if position.max_vote > 1:
             instruction = "You may select up to " + \
                 str(position.max_vote) + " candidates"
             input_box = '<input type="checkbox" class="flat-red ' + \
-                slugify(position.name)+'" name="' + \
-                slugify(position.name)+"[]" + '">'
+                position_name+'" name="' + \
+                position_name+"[]" + '">'
         else:
             instruction = "Select only one candidate"
             input_box = '<input type="radio" class="flat-red ' + \
-                slugify(position.name)+'" name="'+slugify(position.name)+'">'
+                position_name+'" name="'+position_name+'">'
         candidates = Candidate.objects.filter(position=position)
         for candidate in candidates:
             image = "/media/" + str(candidate.photo)
@@ -44,7 +46,7 @@ def fetch_ballot(request):
             down = 'disabled'
         output = output + f"""<div class="row">	<div class="col-xs-12"><div class="box box-solid" id="{position.id}">
              <div class="box-header with-border">
-            <h3 class="box-title"><b>{position.name}</b></h3>
+            <h3 class="box-title"><b>{name}</b></h3>
            
             <div class="pull-right box-tools">
             <button type="button" class="btn btn-default btn-sm moveup" data-id="{position.id}" {up}><i class="fa fa-arrow-up"></i> </button>
@@ -54,7 +56,7 @@ def fetch_ballot(request):
             <div class="box-body">
             <p>{instruction}
             <span class="pull-right">
-            <button type="button" class="btn btn-success btn-sm btn-flat reset" data-desc="{position.name}"><i class="fa fa-refresh"></i> Reset</button>
+            <button type="button" class="btn btn-success btn-sm btn-flat reset" data-desc="{position_name}"><i class="fa fa-refresh"></i> Reset</button>
             </span>
             </p>
             <div id="candidate_list">
