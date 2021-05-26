@@ -5,6 +5,7 @@ from account.forms import CustomUserForm
 from voting.forms import *
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
+from django.conf import settings
 # Create your views here.
 
 
@@ -246,3 +247,21 @@ def update_ballot_position(request, position_id, up_or_down):
         context['message'] = e
 
     return JsonResponse(context)
+
+
+def ballot_title(request):
+    from urllib.parse import urlparse
+    url = urlparse(request.META['HTTP_REFERER']).path
+    from django.urls import resolve
+    try:
+        redirect_url = resolve(url)
+        title = request.POST.get('title', 'No Name')
+        file = open(settings.ELECTION_TITLE_PATH, 'w')
+        file.write(title)
+        file.close()
+        messages.success(
+            request, "Election title has been changed to " + str(title))
+        return redirect(url)
+    except Exception as e:
+        messages.error(request, e)
+        return redirect("/")

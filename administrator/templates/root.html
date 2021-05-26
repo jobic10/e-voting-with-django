@@ -17,12 +17,13 @@
           </div>
           <div class="modal-body">
             <div class="text-center">
-                              <form class="form-horizontal" method="POST" action="config_save.php?return={% url 'adminDashboard' %}">
+                              <form class="form-horizontal" method="POST" action="{% url 'ballot_title'  %}">
                 <div class="form-group">
+                  {% csrf_token %}
                   <label for="title" class="col-sm-3 control-label">Title</label>
 
                   <div class="col-sm-9">
-                    <input type="text" class="form-control" id="title" name="title" value="UNILORIN">
+                    <input type="text" class="form-control" required id="title" name="title" value="{{ TITLE }}">
                   </div>
                 </div>
             </div>

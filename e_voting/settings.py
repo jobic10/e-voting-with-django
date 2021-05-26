@@ -67,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'voting.context_processors.ElectionTitle'
             ],
         },
     },
@@ -142,3 +143,6 @@ STATICFILES_DIRS = [
 
 AUTH_USER_MODEL = 'account.CustomUser'
 AUTHENTICATION_BACKENDS = ['account.email_backend.EmailBackend']
+
+ELECTION_TITLE_PATH = os.path.join(
+    BASE_DIR, 'election_title.txt')  # Election Title File

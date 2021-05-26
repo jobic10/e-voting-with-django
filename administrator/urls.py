@@ -24,6 +24,7 @@ urlpatterns = [
 
     # * Settings (Ballot Position and Election Title)
     path("settings/ballot/position", views.ballot_position, name='ballot_position'),
+    path("settings/ballot/title/", views.ballot_title, name='ballot_title'),
     path("settings/ballot/position/update/<int:position_id>/<str:up_or_down>/",
          views.update_ballot_position, name='update_ballot_position'),
 
