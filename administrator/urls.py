@@ -28,5 +28,8 @@ urlpatterns = [
     path("settings/ballot/position/update/<int:position_id>/<str:up_or_down>/",
          views.update_ballot_position, name='update_ballot_position'),
 
+    # * Votes
+    path('votes/view', views.viewVotes, name='viewVotes'),
+
 
 ]
