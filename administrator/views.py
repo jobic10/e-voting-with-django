@@ -6,8 +6,45 @@ from voting.forms import *
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
-import json
-# Create your views here.
+import json  # Not used
+from django_renderpdf.views import PDFView
+
+
+class PrintView(PDFView):
+    template_name = 'admin/print.html'
+
+    def get_context_data(self, *args, **kwargs):
+        title = "E-voting"
+        try:
+            file = open(settings.ELECTION_TITLE_PATH, 'r')
+            title = file.read()
+        except:
+            pass
+        context = super().get_context_data(*args, **kwargs)
+        position_data = {}
+        for position in Position.objects.all():
+            candidate_data = []
+            winner = ""
+            for candidate in Candidate.objects.filter(position=position):
+                this_candidate_data = {}
+                votes = Votes.objects.filter(candidate=candidate).count()
+                this_candidate_data['name'] = candidate.fullname
+                this_candidate_data['votes'] = votes
+                candidate_data.append(this_candidate_data)
+            # ! Check Winner
+            if len(candidate_data) < 1:
+                winner = "Position does not have candidates"
+            else:
+                winner = max(candidate_data, key=lambda x: x['votes'])
+                if winner['votes'] == 0:
+                    winner = "No one voted for this yet position, yet."
+                else:
+                    winner = "Winner : " + winner['name']
+
+            position_data[position.name] = {
+                'candidate_data': candidate_data, 'winner': winner}
+        context['positions'] = position_data
+        return context
 
 
 def dashboard(request):
