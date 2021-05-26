@@ -202,3 +202,47 @@ def view_candidate_by_id(request):
         previous = CandidateForm(instance=candidate)
         context['form'] = str(previous.as_p())
     return JsonResponse(context)
+
+
+def ballot_position(request):
+    context = {}
+    return render(request, "admin/ballot_position.html", context)
+
+
+def update_ballot_position(request, position_id, up_or_down):
+    try:
+        context = {
+            'error': False
+        }
+        position = Position.objects.get(id=position_id)
+        print("**" * 30)
+        print(up_or_down)
+        print(position_id)
+        print("**" * 30)
+        if up_or_down == 'up':
+            priority = position.priority - 1
+            if priority == 0:
+                context['error'] = True
+                output = "This position is already at the top"
+            else:
+                Position.objects.filter(priority=priority).update(
+                    priority=(priority+1))
+                position.priority = priority
+                position.save()
+                output = "Moved Up"
+        else:
+            priority = position.priority + 1
+            if priority > Position.objects.all().count():
+                output = "This position is already at the bottom"
+                context['error'] = True
+            else:
+                Position.objects.filter(priority=priority).update(
+                    priority=(priority-1))
+                position.priority = priority
+                position.save()
+                output = "Moved Down"
+        context['message'] = output
+    except Exception as e:
+        context['message'] = e
+
+    return JsonResponse(context)
