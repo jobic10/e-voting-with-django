@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}"">
+
+</head>
+<body>
+  
+<section class="content">
+  <div class="row">
+<div class="col-xs-12">
+<div class="box">
+  <div class="text-center font-weight-bold h1">
+  {{ title }} Result
+  </div>
+<div class="box-body">
+  <table id="example1" class="">
+{% for key, value in positions.items  %} {# Loop 1 #}
+<table id="example1" class="text-center table table-bordered">
+<tr>
+  <th class="text-center" colspan="3">{{ key }}</th>
+  </tr>
+  <tr>
+  <th class="text-center" style="width: 5%;">SN</th>
+  <th class="text-center" style="width: 60%;">Candidate Name </th>
+  <th class="text-center" style="width: 35%;">Total Votes Recorded</th>
+</tr>
+{% for data  in value.candidate_data %} {# Loop 2 #}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td>{{ data.name }}</td>
+    <td>{{ data.votes }}</td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="3">No Candidates Vying For This Position</td>
+  </tr>
+{% endfor %} {# Please Close Loop 2  #}
+
+<tr>
+  <th class="text-center" colspan="3"> {{ value.winner }} </th>
+  </tr>
+  </table>
+{% endfor %} {# Please Close Loop 1  #}
+
+</tbody>
+  </table>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+</body>
+</html>
