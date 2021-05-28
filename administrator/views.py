@@ -82,7 +82,8 @@ def dashboard(request):
         'voters_count': voters.count(),
         'voted_voters_count': voted_voters.count(),
         'positions': positions,
-        'chart_data': chart_data
+        'chart_data': chart_data,
+        'page_title': "Dashboard"
     }
     return render(request, "admin/home.html", context)
 
@@ -94,7 +95,8 @@ def voters(request):
     context = {
         'form1': userForm,
         'form2': voterForm,
-        'voters': voters
+        'voters': voters,
+        'page_title': 'Voters List'
     }
     if request.method == 'POST':
         if userForm.is_valid() and voterForm.is_valid():
@@ -175,7 +177,8 @@ def viewPositions(request):
     form = PositionForm(request.POST or None)
     context = {
         'positions': positions,
-        'form1': form
+        'form1': form,
+        'page_title': "Positions"
     }
     if request.method == 'POST':
         if form.is_valid():
@@ -220,7 +223,8 @@ def viewCandidates(request):
     form = CandidateForm(request.POST or None, request.FILES or None)
     context = {
         'candidates': candidates,
-        'form1': form
+        'form1': form,
+        'page_title': 'Candidates'
     }
     if request.method == 'POST':
         if form.is_valid():
@@ -279,7 +283,9 @@ def view_candidate_by_id(request):
 
 
 def ballot_position(request):
-    context = {}
+    context = {
+        'page_title': "Ballot Position"
+    }
     return render(request, "admin/ballot_position.html", context)
 
 
@@ -289,10 +295,6 @@ def update_ballot_position(request, position_id, up_or_down):
             'error': False
         }
         position = Position.objects.get(id=position_id)
-        print("**" * 30)
-        print(up_or_down)
-        print(position_id)
-        print("**" * 30)
         if up_or_down == 'up':
             priority = position.priority - 1
             if priority == 0:
@@ -343,7 +345,8 @@ def ballot_title(request):
 def viewVotes(request):
     votes = Votes.objects.all()
     context = {
-        'votes': votes
+        'votes': votes,
+        'page_title': 'Votes'
     }
     return render(request, "admin/votes.html", context)
 
