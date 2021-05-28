@@ -13,6 +13,11 @@ from django_renderpdf.views import PDFView
 class PrintView(PDFView):
     template_name = 'admin/print.html'
     allow_force_html = True
+    prompt_download = True
+
+    @property
+    def download_name(self):
+        return "result.pdf"
 
     def get_context_data(self, *args, **kwargs):
         title = "E-voting"
