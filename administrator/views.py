@@ -75,7 +75,6 @@ def dashboard(request):
             'pos_id': position.id
         }
 
-    print(chart_data)
     context = {
         'position_count': positions.count(),
         'candidate_count': candidates.count(),
