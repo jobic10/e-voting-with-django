@@ -8,12 +8,15 @@
         <img src="{% static 'images/people.png' %}" class="img-circle" alt="User Image">
       </div>
       <div class="pull-left info">
-        <p>System Administrator</p>
+        <p>{{ request.user }}</p>
         <a><i class="fa fa-circle text-success"></i> Online</a>
       </div>
     </div>
     <!-- sidebar menu: : style can be found in sidebar.less -->
     <ul class="sidebar-menu" data-widget="tree">
+      {% if request.user.user_type == '1' %}
+  
+      
       <li class="header">REPORTS</li>
       <li class=""><a href="{% url 'adminDashboard' %}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
       <li class=""><a href="{% url 'viewVotes' %}"><span class="glyphicon glyphicon-lock"></span> <span>Votes</span></a></li>
@@ -24,6 +27,12 @@
       <li class="header">SETTINGS</li>
       <li class=""><a href="{% url 'ballot_position' %}"><i class="fa fa-file-text"></i> <span>Ballot Position</span></a></li>
       <li class=""><a href="#config" data-toggle="modal"><i class="fa fa-cog"></i> <span>Election Title</span></a></li>
+            
+      {% endif %}
+        
+      <li class="header">Exit</li>
+      <li class=""><a href="{% url 'ballot_position' %}"><i class="fa fa-arrow-left"></i> <span>Logout</span></a></li>
+
     </ul>
   </section>
   <!-- /.sidebar -->
