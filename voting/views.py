@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, reverse
 from account.views import account_login
 from .models import Position, Candidate
 from django.http import JsonResponse
@@ -74,3 +74,20 @@ def fetch_ballot(request):
         num = num + 1
         candidates_data = ''
     return JsonResponse(output, safe=False)
+
+
+def dashboard(request):
+    user = request.user
+    # * Check if this voter has been verified
+    if user.voter.otp is None:
+        return redirect(reverse('voterVerify'))
+    else:
+        if user.voter.voted == 1:  # * User has voted
+            pass
+        else:
+            return None
+
+
+def verify(request):
+    context = {}
+    return render(request, "voting/voter/verify.html")
