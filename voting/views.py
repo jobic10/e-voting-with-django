@@ -95,7 +95,7 @@ def generate_otp():
 def dashboard(request):
     user = request.user
     # * Check if this voter has been verified
-    if user.voter.otp is None or user.voter.verified == 0:
+    if user.voter.otp is None or user.voter.verified == False:
         return redirect(reverse('voterVerify'))
     else:
         if user.voter.voted == 1:  # * User has voted
@@ -180,3 +180,32 @@ def send_sms(phone_number, msg):
         return True
     else:
         return False
+
+
+def verify_otp(request):
+    error = True
+    if request.method != 'POST':
+        messages.error(request, "Access Denied")
+    else:
+        otp = request.POST.get('otp')
+        if otp is None:
+            messages.error(request, "Please provide valid OTP")
+        else:
+            # Get User OTP
+            voter = request.user.voter
+            db_otp = voter.otp
+            if db_otp != otp:
+                messages.error(request, "Provided OTP is not valid")
+            else:
+                messages.success(
+                    request, "You are now verified. Please cast your vote")
+                voter.verified = True
+                voter.save()
+                error = False
+    if error:
+        return redirect(reverse('voterVerify'))
+    return redirect(reverse('show_ballot'))
+
+
+def show_ballot(request):
+    pass

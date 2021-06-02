@@ -12,7 +12,7 @@ aria-hidden="true">&times;</button>
 </div>
 
                   <!-- Voting Ballot -->
-<form method="POST" id="ballotForm" action="">
+<form method="POST" id="ballotForm" action="{% url 'verify_otp' %}">
   {% csrf_token %}
 <div class="row">
 <div class="col-xs-12">
