@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.utils.text import slugify
 from django.contrib import messages
 from django.conf import settings
+from django.http import JsonResponse
 import requests
 import json
 # Create your views here.
@@ -51,7 +52,7 @@ def fetch_ballot(request):
         output = output + f"""<div class="row">	<div class="col-xs-12"><div class="box box-solid" id="{position.id}">
              <div class="box-header with-border">
             <h3 class="box-title"><b>{name}</b></h3>
-           
+
             <div class="pull-right box-tools">
             <button type="button" class="btn btn-default btn-sm moveup" data-id="{position.id}" {up}><i class="fa fa-arrow-up"></i> </button>
             <button type="button" class="btn btn-default btn-sm movedown" data-id="{position.id}" {down}><i class="fa fa-arrow-down"></i></button>
@@ -104,13 +105,6 @@ def dashboard(request):
 
 
 def verify(request):
-    voter = request.user.voter
-    if voter.otp_sent >= 3:
-        messages.error(
-            request, "You have requested OTP three times. You cannot do this again! Please enter previously sent OTP")
-    else:
-        msg = resend_otp(request)
-        messages.info(request, msg)
     context = {
         'page_title': 'OTP Verification'
     }
@@ -124,40 +118,43 @@ def resend_otp(request):
     For quick and easy access, Toggle the SEND_OTP from True to False in settings.py
     """
     user = request.user
+    voter = user.voter
     if settings.SEND_OTP:
-        voter = user.voter
-        phone = voter.phone
-        # Now, check if an OTP has been generated previously for this voter
-        otp = voter.otp
-        if otp is None:
-            # Generate new OTP
-            otp = generate_otp()
-            voter.otp = otp
-            voter.save()
-        try:
-            msg = "Dear " + str(user) + ", kindly use " + \
-                str(otp) + " as your OTP"
-            message_is_sent = send_sms(phone, msg)
-            if message_is_sent:  # * OTP was sent successfully
-                # Update how many OTP has been sent to this voter
-                # Limited to Three so voters don't exhaust OTP balance
-                voter.otp_sent = voter.otp_sent + 1
+        if voter.otp_sent >= 3:
+            response = "You have requested OTP three times. You cannot do this again! Please enter previously sent OTP"
+        else:
+            phone = voter.phone
+            # Now, check if an OTP has been generated previously for this voter
+            otp = voter.otp
+            if otp is None:
+                # Generate new OTP
+                otp = generate_otp()
+                voter.otp = otp
                 voter.save()
+            try:
+                msg = "Dear " + str(user) + ", kindly use " + \
+                    str(otp) + " as your OTP"
+                message_is_sent = send_sms(phone, msg)
+                if message_is_sent:  # * OTP was sent successfully
+                    # Update how many OTP has been sent to this voter
+                    # Limited to Three so voters don't exhaust OTP balance
+                    voter.otp_sent = voter.otp_sent + 1
+                    voter.save()
 
-                response = "OTP has been sent to your phone number. Please provide it in the box provided below"
-            else:
-                response = "OTP not sent. Please try again"
-        except Exception as e:
-            response = "OTP could not be sent." + str(e)
+                    response = "OTP has been sent to your phone number. Please provide it in the box provided below"
+                else:
+                    response = "OTP not sent. Please try again"
+            except Exception as e:
+                response = "OTP could not be sent." + str(e)
 
-            # * Send OTP
+                # * Send OTP
     else:
         #! Update all Voters record and set OTP to 0000
         #! Bypass OTP verification by updating verified to 1
         #! Redirect voters to ballot page
         Voter.objects.all().update(otp="0000", verified=1)
         response = "Kindly cast your vote"
-    return response
+    return JsonResponse({"data": response})
 
 
 def send_sms(phone_number, msg):

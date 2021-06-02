@@ -13,6 +13,7 @@ aria-hidden="true">&times;</button>
 
                   <!-- Voting Ballot -->
 <form method="POST" id="ballotForm" action="">
+  {% csrf_token %}
 <div class="row">
 <div class="col-xs-12">
   <div class="box box-solid" id="">
@@ -25,9 +26,9 @@ aria-hidden="true">&times;</button>
       <div class="box-body">
           <div id="candidate_list">
               <p><span class="pull-right">
-                      <a href="{% url 'resend_otp' %}"
+                      <a id="request_otp"
                           class="btn btn-success btn-sm btn-flat "><i
-                              class="fa fa-refresh"></i> Request Again</a>
+                              class="fa fa-refresh"></i> Request OTP</a>
                   </span>
               </p>
           </div>
@@ -52,3 +53,30 @@ aria-hidden="true">&times;</button>
   </div>
 </section>
 {% endblock content %}
+
+{% block custom_js %}
+  <script>
+    $("#request_otp").click(function(){
+      var button =  $("#request_otp");
+      button.attr("disabled",true);
+      $.ajax({
+        url: "{% url 'resend_otp' %}",
+        type: 'GET',
+
+        success: function(response){
+          console.log(response.data)
+          toastr.success(response.data,"OTP Response");
+          button.attr("disabled",false);
+
+        },
+        error: function(response){
+          data = JSON.parse(response)
+          toastr.error(data.data,"Error occurred while sending OTP");
+          button.attr("disabled",false);
+
+        },
+
+      });
+    });
+  </script>
+{% endblock custom_js %}
