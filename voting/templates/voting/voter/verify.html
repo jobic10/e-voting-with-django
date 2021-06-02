@@ -1,1 +1,54 @@
 {% extends 'root.html' %}
+{% block content %}
+<section class="content">
+  <h1 class="page-header text-center title"><b>{{ TITLE }}</b></h1>
+<div class="row">
+<div class="col-sm-10 col-sm-offset-1">
+
+<div class="alert alert-danger alert-dismissible" id="alert" style="display:none;">
+<button type="button" class="close" data-dismiss="alert"
+aria-hidden="true">&times;</button>
+<span class="message"></span>
+</div>
+
+                  <!-- Voting Ballot -->
+<form method="POST" id="ballotForm" action="">
+<div class="row">
+<div class="col-xs-12">
+  <div class="box box-solid" id="">
+      <div class="box-header with-border">
+          <h3 class="box-title"><b>Please, you'd need to verify ownership of this
+                  account.</b>
+              <hr>
+          </h3>
+      </div>
+      <div class="box-body">
+          <div id="candidate_list">
+              <p><span class="pull-right">
+                      <a href="{% url 'resend_otp' %}"
+                          class="btn btn-success btn-sm btn-flat "><i
+                              class="fa fa-refresh"></i> Request Again</a>
+                  </span>
+              </p>
+          </div>
+          <ul>
+              <p> Kindly provide the OTP sent to your phone number that ends with
+                  **-***-*{{ request.user.voter.phone|slice:"7:" }}</p>
+          </ul>
+          <hr />
+          <div class="form-group has-feedback">
+              <input type="text" class="form-control" name="otp" placeholder="OTP"
+                  required>
+              <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+          </div>
+          <button type="submit" class="btn btn-primary btn-flat" name="verify"><i
+            class="fa fa-check-square-o"></i> Verify OTP</button>
+</div>
+    </div>
+      </div>
+       </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock content %}

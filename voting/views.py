@@ -1,8 +1,12 @@
 from django.shortcuts import render, redirect, reverse
 from account.views import account_login
-from .models import Position, Candidate
+from .models import Position, Candidate, Voter, Votes
 from django.http import JsonResponse
 from django.utils.text import slugify
+from django.contrib import messages
+from django.conf import settings
+import requests
+import json
 # Create your views here.
 
 
@@ -76,10 +80,21 @@ def fetch_ballot(request):
     return JsonResponse(output, safe=False)
 
 
+def generate_otp():
+    """Link to this function
+    https://www.codespeedy.com/otp-generation-using-random-module-in-python/
+    """
+    import random as r
+    otp = ""
+    for i in range(r.randint(5, 8)):
+        otp += str(r.randint(1, 9))
+    return otp
+
+
 def dashboard(request):
     user = request.user
     # * Check if this voter has been verified
-    if user.voter.otp is None:
+    if user.voter.otp is None or user.voter.verified == 0:
         return redirect(reverse('voterVerify'))
     else:
         if user.voter.voted == 1:  # * User has voted
@@ -89,5 +104,70 @@ def dashboard(request):
 
 
 def verify(request):
+    msg = resend_otp(request)
+    messages.info(request, msg)
     context = {}
     return render(request, "voting/voter/verify.html")
+
+
+def resend_otp(request):
+    """API For SMS
+    I used https://www.multitexter.com/ API to send SMS
+    You might not want to use this or this service might not be available in your Country
+    For quick and easy access, Toggle the SEND_OTP from True to False in settings.py
+    """
+    user = request.user
+    if settings.SEND_OTP:
+        voter = user.voter
+        phone = voter.phone
+        # Now, check if an OTP has been generated previously for this voter
+        otp = voter.otp
+        if otp is None:
+            # Generate new OTP
+            otp = generate_otp()
+            voter.otp = otp
+            voter.save()
+        try:
+            msg = "Dear " + str(request.user) + \
+                ", kindly use " + str(otp) + " as your OTP"
+            r = send_sms(phone, msg)
+            if r:
+                response = "OTP has been sent to your phone number. Please provide it in the box provided below"
+            else:
+                response = "OTP not sent. Please try again"
+        except Exception as e:
+            response = "OTP could not be sent." + str(e)
+
+            # * Send OTP
+    else:
+        #! Update all Voters record and set OTP to 0000
+        #! Bypass OTP verification by updating verified to 1
+        #! Redirect voters to ballot page
+        Voter.objects.all().update(otp="0000", verified=1)
+        response = "Kindly cast your vote"
+    return response
+
+
+def send_sms(phone_number, msg):
+    """Read More
+    https://www.multitexter.com/developers
+    """
+    import requests
+    import os
+    import json
+    response = ""
+    email = os.environ.get('SMS_EMAIL')
+    password = os.environ.get('SMS_PASSWORD')
+    if email is None or password is None:
+        raise Exception("Email/Password cannot be Null")
+    url = "https://app.multitexter.com/v2/app/sms"
+    data = {"email": email, "password": password, "message": msg,
+            "sender_name": "OTP", "recipients": phone_number, "forcednd": 1}
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    r = requests.post(url, data=json.dumps(data), headers=headers)
+    response = r.json()
+    status = response.get('status', 0)
+    if str(status) == '1':
+        return True
+    else:
+        return False
