@@ -104,10 +104,17 @@ def dashboard(request):
 
 
 def verify(request):
-    msg = resend_otp(request)
-    messages.info(request, msg)
-    context = {}
-    return render(request, "voting/voter/verify.html")
+    voter = request.user.voter
+    if voter.otp_sent >= 3:
+        messages.error(
+            request, "You have requested OTP three times. You cannot do this again! Please enter previously sent OTP")
+    else:
+        msg = resend_otp(request)
+        messages.info(request, msg)
+    context = {
+        'page_title': 'OTP Verification'
+    }
+    return render(request, "voting/voter/verify.html", context)
 
 
 def resend_otp(request):
@@ -128,10 +135,15 @@ def resend_otp(request):
             voter.otp = otp
             voter.save()
         try:
-            msg = "Dear " + str(request.user) + \
-                ", kindly use " + str(otp) + " as your OTP"
-            r = send_sms(phone, msg)
-            if r:
+            msg = "Dear " + str(user) + ", kindly use " + \
+                str(otp) + " as your OTP"
+            message_is_sent = send_sms(phone, msg)
+            if message_is_sent:  # * OTP was sent successfully
+                # Update how many OTP has been sent to this voter
+                # Limited to Three so voters don't exhaust OTP balance
+                voter.otp_sent = voter.otp_sent + 1
+                voter.save()
+
                 response = "OTP has been sent to your phone number. Please provide it in the box provided below"
             else:
                 response = "OTP not sent. Please try again"
