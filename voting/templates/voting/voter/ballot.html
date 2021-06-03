@@ -13,8 +13,14 @@ aria-hidden="true">&times;</button>
 
 
 <form method="POST" id="ballotForm" action="submit_ballot.php">
-  
-{{ ballot|safe }}
+  {% csrf_token %}
+  {{ ballot|safe }}
+  <div class="text-center">
+    <button type="button" class="btn btn-success btn-flat" id="preview"><i
+            class="fa fa-file-text"></i> Preview</button>
+    <button type="submit" class="btn btn-primary btn-flat" name="vote"><i
+            class="fa fa-check-square-o"></i> Submit</button>
+</div>
 </form>
     </div>
   </div>
