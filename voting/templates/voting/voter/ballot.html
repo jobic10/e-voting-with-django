@@ -1,0 +1,102 @@
+{% extends 'root.html' %}
+{% block content %}
+<section class="content">
+  <h1 class="page-header text-center title"><b>{{ TITLE }}</b></h1>
+<div class="row">
+<div class="col-sm-10 col-sm-offset-1">
+
+<div class="alert alert-danger alert-dismissible" id="alert" style="display:none;">
+<button type="button" class="close" data-dismiss="alert"
+aria-hidden="true">&times;</button>
+<span class="message"></span>
+</div>
+
+
+<form method="POST" id="ballotForm" action="submit_ballot.php">
+  
+{{ ballot|safe }}
+</form>
+    </div>
+  </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+  $(function() {
+      $('.content').iCheck({
+          checkboxClass: 'icheckbox_flat-green',
+          radioClass: 'iradio_flat-green'
+      });
+
+      $(document).on('click', '.reset', function(e) {
+          e.preventDefault();
+          var desc = $(this).data('desc');
+          $('.' + desc).iCheck('uncheck');
+      });
+
+      $(document).on('click', '.platform', function(e) {
+          e.preventDefault();
+          $('#bio').modal('show');
+          var platform = $(this).data('bio');
+          var fullname = $(this).data('fullname');
+          $('.candidate').html(fullname);
+          $('#plat_view').html(platform);
+      });
+
+      $('#preview').click(function(e) {
+          e.preventDefault();
+          var form = $('#ballotForm').serialize();
+          if (form == '') {
+              $('.message').html('You must vote at least one candidate');
+              $('#alert').show();
+          } else {
+              $.ajax({
+                  type: 'POST',
+                  url: 'preview.php',
+                  data: form,
+                  dataType: 'json',
+                  success: function(response) {
+                      if (response.error) {
+                          var errmsg = '';
+                          var messages = response.message;
+                          for (i in messages) {
+                              errmsg += messages[i];
+                          }
+                          $('.message').html(errmsg);
+                          $('#alert').show();
+                      } else {
+                          $('#preview_modal').modal('show');
+                          $('#preview_body').html(response.list);
+                      }
+                  }
+              });
+          }
+
+      });
+
+  });
+</script>
+
+{% endblock custom_js %}
+
+{% block modal %}
+<div class="modal fade" id="bio">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><b><span class="candidate"></b></h4>
+          </div>
+          <div class="modal-body">
+            <p id="plat_view"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+          </div>
+      </div>
+  </div>
+</div>
+
+{% endblock modal %}
