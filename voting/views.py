@@ -249,19 +249,27 @@ def preview_vote(request):
                         str(max_vote) + " candidates for " + position.name
                 else:
                     # for key, value in form.items():
+                    start_tag = f"""
+                       <div class='row votelist'>
+		                      	<span class='col-sm-4'><span class='pull-right'><b>{position.name} :</b></span></span>
+		                      	<span class='col-sm-8'>
+                                <ul>
+                                
+                    
+                    """
+                    end_tag = "</ul></span></div>"
+                    data = ""
                     for form_candidate_id in form_position:
                         try:
                             candidate = Candidate.objects.get(
                                 id=form_candidate_id, position=position)
-                            output += f"""
-                            <div class='row votelist'>
-		                      	<span class='col-sm-4'><span class='pull-right'><b>{position.name} :</b></span></span>
-		                      	<span class='col-sm-8'>{candidate.fullname}</span>
-		                    </div>
+                            data += f"""
+		                      	<li>{candidate.fullname}</li>
                             """
                         except:
                             error = True
                             response = "Please, browse the system properly"
+                    output += start_tag + data + end_tag
             else:
                 this_key = pos
                 form_position = form.get(this_key)
