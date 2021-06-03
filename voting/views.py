@@ -27,18 +27,18 @@ def generate_ballot(display_controls=False):
     for position in positions:
         name = position.name
         position_name = slugify(name)
-        if position.max_vote > 1:
-            instruction = "You may select up to " + \
-                str(position.max_vote) + " candidates"
-            input_box = '<input type="checkbox" class="flat-red ' + \
-                position_name+'" name="' + \
-                position_name+"[]" + '">'
-        else:
-            instruction = "Select only one candidate"
-            input_box = '<input type="radio" class="flat-red ' + \
-                position_name+'" name="'+position_name+'">'
         candidates = Candidate.objects.filter(position=position)
         for candidate in candidates:
+            if position.max_vote > 1:
+                instruction = "You may select up to " + \
+                    str(position.max_vote) + " candidates"
+                input_box = '<input type="checkbox" value="'+str(candidate.id)+'" class="flat-red ' + \
+                    position_name+'" name="' + \
+                    position_name+"[]" + '">'
+            else:
+                instruction = "Select only one candidate"
+                input_box = '<input value="'+str(candidate.id)+'" type="radio" class="flat-red ' + \
+                    position_name+'" name="'+position_name+'">'
             image = "/media/" + str(candidate.photo)
             candidates_data = candidates_data + '<li>' + input_box + '<button type="button" class="btn btn-primary btn-sm btn-flat clist platform" data-fullname="'+candidate.fullname+'" data-bio="'+candidate.bio+'"><i class="fa fa-search"></i> Platform</button><img src="' + \
                 image+'" height="100px" width="100px" class="clist"><span class="cname clist">' + \
@@ -223,8 +223,56 @@ def show_ballot(request):
 
 
 def preview_vote(request):
-    pass
+    if request.method != 'POST':
+        error = True
+        response = "Please browse the system properly"
+    else:
+        output = ""
+        form = dict(request.POST)
+        print(type(form))
+        # We don't need to loop over CSRF token
+        form.pop('csrfmiddlewaretoken', None)
+        error = False
+        data = []
+        positions = Position.objects.all()
+        for position in positions:
+            max_vote = position.max_vote
+            pos = slugify(position.name)
+            pos_id = position.id
+            if position.max_vote > 1:
+                this_key = pos + "[]"
+                form_position = form.get(this_key)
+                if form_position is None:
+                    continue
+                if len(form_position) > max_vote:
+                    error = True
+                    response = "You can only choose " + \
+                        str(max_vote) + " candidates for " + position.name
+                else:
+                    print("Kosi Wahala rara")
+                    # for key, value in form.items():
+                    for form_candidate_id in form_position:
+                        try:
+                            candidate = Candidate.objects.get(
+                                id=form_candidate_id)
+                        except:
+                            error = True
+                            response = "Please, browse the system properly"
+                        print("Here == > " + str(form_candidate_id))
 
 
 def submit_ballot(request):
     pass
+    """
+    Key = csrfmiddlewaretoken
+    Value = DB2BwfAajGTTXn2lZMPvWbHBcOBagTqgPeCebg0cwAiSFNEiNvbHsMFJSJnOEdWI
+    Key = president
+    Value = 7
+    Key = vice-president
+    Value = 9
+    Key = general-secretary
+    Value = 12
+    Key = pro[]
+    Value = 8
+
+    """
