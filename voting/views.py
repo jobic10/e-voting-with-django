@@ -220,3 +220,11 @@ def show_ballot(request):
         'ballot': ballot
     }
     return render(request, "voting/voter/ballot.html", context)
+
+
+def preview_vote(request):
+    pass
+
+
+def submit_ballot(request):
+    pass

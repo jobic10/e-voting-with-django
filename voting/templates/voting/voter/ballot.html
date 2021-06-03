@@ -12,7 +12,7 @@ aria-hidden="true">&times;</button>
 </div>
 
 
-<form method="POST" id="ballotForm" action="submit_ballot.php">
+<form method="POST" id="ballotForm" action="{% url 'submit_ballot' %}">
   {% csrf_token %}
   {{ ballot|safe }}
   <div class="text-center">
@@ -59,7 +59,7 @@ aria-hidden="true">&times;</button>
           } else {
               $.ajax({
                   type: 'POST',
-                  url: 'preview.php',
+                  url: '{% url "preview_vote" %}',
                   data: form,
                   dataType: 'json',
                   success: function(response) {
@@ -87,6 +87,7 @@ aria-hidden="true">&times;</button>
 {% endblock custom_js %}
 
 {% block modal %}
+
 <div class="modal fade" id="bio">
   <div class="modal-dialog">
       <div class="modal-content">
@@ -105,4 +106,22 @@ aria-hidden="true">&times;</button>
   </div>
 </div>
 
+
+<div class="modal fade" id="platform">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><b><span class="candidate"></b></h4>
+          </div>
+          <div class="modal-body">
+            <p id="plat_view"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+          </div>
+      </div>
+  </div>
+</div>
 {% endblock modal %}
