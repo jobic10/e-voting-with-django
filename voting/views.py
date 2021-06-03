@@ -18,7 +18,7 @@ def index(request):
     # return render(request, "voting/login.html", context)
 
 
-def fetch_ballot(request):
+def generate_ballot(display_controls=False):
     positions = Position.objects.order_by('priority').all()
     output = ""
     candidates_data = ""
@@ -40,7 +40,7 @@ def fetch_ballot(request):
         candidates = Candidate.objects.filter(position=position)
         for candidate in candidates:
             image = "/media/" + str(candidate.photo)
-            candidates_data = candidates_data + '<li>' + input_box + '<button class="btn btn-primary btn-sm btn-flat clist"><i class="fa fa-search"></i> Platform</button><img src="' + \
+            candidates_data = candidates_data + '<li>' + input_box + '<button type="button" class="btn btn-primary btn-sm btn-flat clist platform" data-fullname="'+candidate.fullname+'" data-bio="'+candidate.bio+'"><i class="fa fa-search"></i> Platform</button><img src="' + \
                 image+'" height="100px" width="100px" class="clist"><span class="cname clist">' + \
                 candidate.fullname+'</span></li>'
         up = ''
@@ -51,33 +51,40 @@ def fetch_ballot(request):
             down = 'disabled'
         output = output + f"""<div class="row">	<div class="col-xs-12"><div class="box box-solid" id="{position.id}">
              <div class="box-header with-border">
-            <h3 class="box-title"><b>{name}</b></h3>
+            <h3 class="box-title"><b>{name}</b></h3>"""
 
-            <div class="pull-right box-tools">
-            <button type="button" class="btn btn-default btn-sm moveup" data-id="{position.id}" {up}><i class="fa fa-arrow-up"></i> </button>
-            <button type="button" class="btn btn-default btn-sm movedown" data-id="{position.id}" {down}><i class="fa fa-arrow-down"></i></button>
-            </div>
-            </div>
-            <div class="box-body">
-            <p>{instruction}
-            <span class="pull-right">
-            <button type="button" class="btn btn-success btn-sm btn-flat reset" data-desc="{position_name}"><i class="fa fa-refresh"></i> Reset</button>
-            </span>
-            </p>
-            <div id="candidate_list">
-            <ul>
-            {candidates_data}
-            </ul>
-            </div>
-            </div>
-            </div>
-            </div>
-            </div>
+        if display_controls:
+            output = output + f""" <div class="pull-right box-tools">
+        <button type="button" class="btn btn-default btn-sm moveup" data-id="{position.id}" {up}><i class="fa fa-arrow-up"></i> </button>
+        <button type="button" class="btn btn-default btn-sm movedown" data-id="{position.id}" {down}><i class="fa fa-arrow-down"></i></button>
+        </div>"""
+
+        output = output + f"""</div>
+        <div class="box-body">
+        <p>{instruction}
+        <span class="pull-right">
+        <button type="button" class="btn btn-success btn-sm btn-flat reset" data-desc="{position_name}"><i class="fa fa-refresh"></i> Reset</button>
+        </span>
+        </p>
+        <div id="candidate_list">
+        <ul>
+        {candidates_data}
+        </ul>
+        </div>
+        </div>
+        </div>
+        </div>
+        </div>
         """
         position.priority = num
         position.save()
         num = num + 1
         candidates_data = ''
+    return output
+
+
+def fetch_ballot(request):
+    output = generate_ballot(display_controls=True)
     return JsonResponse(output, safe=False)
 
 
@@ -208,4 +215,8 @@ def verify_otp(request):
 
 
 def show_ballot(request):
-    pass
+    ballot = generate_ballot(display_controls=False)
+    context = {
+        'ballot': ballot
+    }
+    return render(request, "voting/voter/ballot.html", context)
