@@ -253,7 +253,7 @@ def preview_vote(request):
                        <div class='row votelist'>
 		                      	<span class='col-sm-4'><span class='pull-right'><b>{position.name} :</b></span></span>
 		                      	<span class='col-sm-8'>
-                                <ul>
+                                <ul style='list-style-type:none; margin-left:-40px'>
                                 
                     
                     """
@@ -264,7 +264,7 @@ def preview_vote(request):
                             candidate = Candidate.objects.get(
                                 id=form_candidate_id, position=position)
                             data += f"""
-		                      	<li>{candidate.fullname}</li>
+		                      	<li><i class="fa fa-check-square-o"></i> {candidate.fullname}</li>
                             """
                         except:
                             error = True
@@ -283,7 +283,7 @@ def preview_vote(request):
                     output += f"""
                             <div class='row votelist'>
 		                      	<span class='col-sm-4'><span class='pull-right'><b>{position.name} :</b></span></span>
-		                      	<span class='col-sm-8'>{candidate.fullname}</span>
+		                      	<span class='col-sm-8'><i class="fa fa-check-circle-o"></i> {candidate.fullname}</span>
 		                    </div>
                     """
                 except Exception as e:
