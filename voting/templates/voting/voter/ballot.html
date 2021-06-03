@@ -69,8 +69,7 @@ aria-hidden="true">&times;</button>
                           for (i in messages) {
                               errmsg += messages[i];
                           }
-                          $('.message').html(errmsg);
-                          $('#alert').show();
+                          toastr.error(errmsg, "Preview Error")
                       } else {
                           $('#preview_modal').modal('show');
                           $('#preview_body').html(response.list);
@@ -106,17 +105,17 @@ aria-hidden="true">&times;</button>
   </div>
 </div>
 
-
-<div class="modal fade" id="platform">
+<!-- Preview -->
+<div class="modal fade" id="preview_modal">
   <div class="modal-dialog">
       <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title"><b><span class="candidate"></b></h4>
+            <h4 class="modal-title">Vote Preview</h4>
           </div>
           <div class="modal-body">
-            <p id="plat_view"></p>
+            <div id="preview_body"></div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>

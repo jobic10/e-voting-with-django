@@ -257,7 +257,7 @@ def preview_vote(request):
                                 id=form_candidate_id, position=position)
                             output += f"""
                             <div class='row votelist'>
-		                      	<span class='col-sm-4'><span class='pull-right'><b>{position.name} :</b></span></span> 
+		                      	<span class='col-sm-4'><span class='pull-right'><b>{position.name} :</b></span></span>
 		                      	<span class='col-sm-8'>{candidate.fullname}</span>
 		                    </div>
                             """
@@ -266,8 +266,31 @@ def preview_vote(request):
                             response = "Please, browse the system properly"
                         print("Here == > " + str(form_candidate_id))
             else:
+                this_key = pos
+                form_position = form.get(this_key)
+                if form_position is None:
+                    continue
                 # Max Vote == 1
-                pass
+                try:
+                    form_position = form_position[0]
+                    candidate = Candidate.objects.get(
+                        position=position, id=form_position)
+                    output += f"""
+                            <div class='row votelist'>
+		                      	<span class='col-sm-4'><span class='pull-right'><b>{position.name} :</b></span></span>
+		                      	<span class='col-sm-8'>{candidate.fullname}</span>
+		                    </div>
+                    """
+                    print("Progressing")
+                except Exception as e:
+                    error = True
+                    response = "Please, browse the system properly"
+                    print(" 281 Here == > " + str(e))
+    context = {
+        'error': error,
+        'list': output
+    }
+    return JsonResponse(context, safe=False)
 
 
 def submit_ballot(request):
