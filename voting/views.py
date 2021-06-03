@@ -250,14 +250,14 @@ def preview_vote(request):
                 else:
                     # for key, value in form.items():
                     start_tag = f"""
-                       <div class='row votelist'>
+                       <div class='row votelist' style='padding-bottom: 2px'>
 		                      	<span class='col-sm-4'><span class='pull-right'><b>{position.name} :</b></span></span>
 		                      	<span class='col-sm-8'>
                                 <ul style='list-style-type:none; margin-left:-40px'>
                                 
                     
                     """
-                    end_tag = "</ul></span></div>"
+                    end_tag = "</ul></span></div><hr/>"
                     data = ""
                     for form_candidate_id in form_position:
                         try:
@@ -281,10 +281,11 @@ def preview_vote(request):
                     candidate = Candidate.objects.get(
                         position=position, id=form_position)
                     output += f"""
-                            <div class='row votelist'>
+                            <div class='row votelist' style='padding-bottom: 2px'>
 		                      	<span class='col-sm-4'><span class='pull-right'><b>{position.name} :</b></span></span>
 		                      	<span class='col-sm-8'><i class="fa fa-check-circle-o"></i> {candidate.fullname}</span>
 		                    </div>
+                      <hr/>
                     """
                 except Exception as e:
                     error = True
