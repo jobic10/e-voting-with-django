@@ -254,11 +254,20 @@ def preview_vote(request):
                     for form_candidate_id in form_position:
                         try:
                             candidate = Candidate.objects.get(
-                                id=form_candidate_id)
+                                id=form_candidate_id, position=position)
+                            output += f"""
+                            <div class='row votelist'>
+		                      	<span class='col-sm-4'><span class='pull-right'><b>{position.name} :</b></span></span> 
+		                      	<span class='col-sm-8'>{candidate.fullname}</span>
+		                    </div>
+                            """
                         except:
                             error = True
                             response = "Please, browse the system properly"
                         print("Here == > " + str(form_candidate_id))
+            else:
+                # Max Vote == 1
+                pass
 
 
 def submit_ballot(request):
