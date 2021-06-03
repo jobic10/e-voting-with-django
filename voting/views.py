@@ -229,7 +229,6 @@ def preview_vote(request):
     else:
         output = ""
         form = dict(request.POST)
-        print(type(form))
         # We don't need to loop over CSRF token
         form.pop('csrfmiddlewaretoken', None)
         error = False
@@ -249,7 +248,6 @@ def preview_vote(request):
                     response = "You can only choose " + \
                         str(max_vote) + " candidates for " + position.name
                 else:
-                    print("Kosi Wahala rara")
                     # for key, value in form.items():
                     for form_candidate_id in form_position:
                         try:
@@ -264,7 +262,6 @@ def preview_vote(request):
                         except:
                             error = True
                             response = "Please, browse the system properly"
-                        print("Here == > " + str(form_candidate_id))
             else:
                 this_key = pos
                 form_position = form.get(this_key)
@@ -281,11 +278,9 @@ def preview_vote(request):
 		                      	<span class='col-sm-8'>{candidate.fullname}</span>
 		                    </div>
                     """
-                    print("Progressing")
                 except Exception as e:
                     error = True
                     response = "Please, browse the system properly"
-                    print(" 281 Here == > " + str(e))
     context = {
         'error': error,
         'list': output
