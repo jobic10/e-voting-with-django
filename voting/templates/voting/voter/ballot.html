@@ -53,9 +53,9 @@ aria-hidden="true">&times;</button>
       $('#preview').click(function(e) {
           e.preventDefault();
           var form = $('#ballotForm').serialize();
-          if (form == '') {
-              $('.message').html('You must vote at least one candidate');
-              $('#alert').show();
+          console.log(form);
+          if (form.search("&") < 0 || form == '') {
+              toastr.error('You must vote at least one candidate', "Preview Error");
           } else {
               $.ajax({
                   type: 'POST',
