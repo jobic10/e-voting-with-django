@@ -108,7 +108,7 @@ def dashboard(request):
         if user.voter.voted == 1:  # * User has voted
             pass
         else:
-            return None
+            return redirect(reverse('show_ballot'))
 
 
 def verify(request):
