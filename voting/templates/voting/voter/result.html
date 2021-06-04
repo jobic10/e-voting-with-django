@@ -1,0 +1,55 @@
+{% extends 'root.html' %}
+{% block content %}
+<section class="content">
+  <h1 class="page-header text-center title"><b>{{ TITLE }}</b></h1>
+<div class="row">
+<div class="col-sm-10 col-sm-offset-1">
+
+<div class="alert alert-danger alert-dismissible" id="alert" style="display:none;">
+<button type="button" class="close" data-dismiss="alert"
+aria-hidden="true">&times;</button>
+<span class="message"></span>
+</div>
+
+<div class="text-center">
+  <h3>You have already voted for this election.</h3>
+  <a href="#view" data-toggle="modal" class="btn btn-flat btn-primary btn-lg">View
+      Your Ballot</a>
+</div>
+    </div>
+  </div>
+</section>
+{% endblock content %}
+
+{% block modal %}
+<div class="modal fade" id="view">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><b>Your Voted Candidates</b></h4>
+          </div>
+          <div class="modal-body">
+              <table class="table-bordered table">
+                <tr>
+                  <th>SN</th>
+                  <th>Position</th>
+                  <th>Candidate</th>
+                </tr>
+                {% for vote in my_votes  %}
+                  <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ vote.position }}</td>
+                    <td>{{ vote.candidate }}</td>
+                  </tr>
+                {% endfor %}
+              </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock modal %}

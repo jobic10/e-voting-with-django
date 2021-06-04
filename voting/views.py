@@ -105,8 +105,12 @@ def dashboard(request):
     if user.voter.otp is None or user.voter.verified == False:
         return redirect(reverse('voterVerify'))
     else:
-        if user.voter.voted == 1:  # * User has voted
-            pass
+        if user.voter.voted:  # * User has voted
+            # To display election result or candidates I voted for ?
+            context = {
+                'my_votes': Votes.objects.filter(voter=user.voter),
+            }
+            return render(request, "voting/voter/result.html", context)
         else:
             return redirect(reverse('show_ballot'))
 
@@ -298,17 +302,87 @@ def preview_vote(request):
 
 
 def submit_ballot(request):
-    pass
-    """
-    Key = csrfmiddlewaretoken
-    Value = DB2BwfAajGTTXn2lZMPvWbHBcOBagTqgPeCebg0cwAiSFNEiNvbHsMFJSJnOEdWI
-    Key = president
-    Value = 7
-    Key = vice-president
-    Value = 9
-    Key = general-secretary
-    Value = 12
-    Key = pro[]
-    Value = 8
+    if request.method != 'POST':
+        messages.error(request, "Please, browse the system properly")
+        return redirect(reverse('show_ballot'))
 
-    """
+    # Verify if the voter has voted or not
+    voter = request.user.voter
+    if voter.voted:
+        messages.error(request, "You have voted already")
+        return redirect(reverse('voterDashboard'))
+
+    form = dict(request.POST)
+    form.pop('csrfmiddlewaretoken', None)  # Pop CSRF Token
+    form.pop('submit_vote', None)  # Pop Submit Button
+
+    # Ensure at least one vote is selected
+    if len(form.keys()) < 1:
+        messages.error(request, "Please select at least one candidate")
+        return redirect(reverse('show_ballot'))
+    positions = Position.objects.all()
+    form_count = 0
+    for position in positions:
+        max_vote = position.max_vote
+        pos = slugify(position.name)
+        pos_id = position.id
+        if position.max_vote > 1:
+            this_key = pos + "[]"
+            form_position = form.get(this_key)
+            if form_position is None:
+                continue
+            if len(form_position) > max_vote:
+                messages.error(request, "You can only choose " +
+                               str(max_vote) + " candidates for " + position.name)
+                return redirect(reverse('show_ballot'))
+            else:
+                for form_candidate_id in form_position:
+                    form_count += 1
+                    try:
+                        candidate = Candidate.objects.get(
+                            id=form_candidate_id, position=position)
+                        vote = Votes()
+                        vote.candidate = candidate
+                        vote.voter = voter
+                        vote.position = position
+                        vote.save()
+                    except Exception as e:
+                        messages.error(
+                            request, "Please, browse the system properly " + str(e))
+                        return redirect(reverse('show_ballot'))
+        else:
+            this_key = pos
+            form_position = form.get(this_key)
+            if form_position is None:
+                continue
+            # Max Vote == 1
+            form_count += 1
+            try:
+                form_position = form_position[0]
+                candidate = Candidate.objects.get(
+                    position=position, id=form_position)
+                vote = Votes()
+                vote.candidate = candidate
+                vote.voter = voter
+                vote.position = position
+                vote.save()
+            except Exception as e:
+                messages.error(
+                    request, "Please, browse the system properly " + str(e))
+                return redirect(reverse('show_ballot'))
+    # Count total number of records inserted
+    # Check it viz-a-viz form_count
+    inserted_votes = Votes.objects.filter(voter=voter)
+    if (inserted_votes.count() != form_count):
+        # Delete
+        print("Inserted = ", str(inserted_votes.count()))
+        print("Form Count = ", str(form_count))
+        inserted_votes.delete()
+        messages.error(request, "Please try voting again!")
+        return redirect(reverse('show_ballot'))
+    else:
+        # Update Voter profile to voted
+        voter.voted = True
+        voter.save()
+        messages.success(request, "Thanks for voting")
+        return redirect(reverse('voterDashboard'))
