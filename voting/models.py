@@ -8,7 +8,7 @@ class Voter(models.Model):
     phone = models.CharField(max_length=11, unique=True)  # Used for OTP
     otp = models.CharField(max_length=10, null=True)
     verified = models.BooleanField(default=False)
-    voted = models.IntegerField(default=0)  # 0 means voter has not voted
+    voted = models.BooleanField(default=False)
     otp_sent = models.IntegerField(default=0)  # Control how many OTPs are sent
 
     def __str__(self):
