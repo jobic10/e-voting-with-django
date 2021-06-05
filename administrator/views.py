@@ -32,12 +32,11 @@ def find_n_winners(data, n):
 
 class PrintView(PDFView):
     template_name = 'admin/print.html'
-    allow_force_html = True
-    # prompt_download = True
+    prompt_download = True
 
-    # @property
-    # def download_name(self):
-    #     return "result.pdf"
+    @property
+    def download_name(self):
+        return "result.pdf"
 
     def get_context_data(self, *args, **kwargs):
         title = "E-voting"
@@ -84,7 +83,7 @@ class PrintView(PDFView):
             print("Candidate Data For  ", str(
                 position.name), " = ", str(candidate_data))
             position_data[position.name] = {
-                'candidate_data': candidate_data, 'winner': winner}
+                'candidate_data': candidate_data, 'winner': winner, 'max_vote': position.max_vote}
         context['positions'] = position_data
         print(context)
         return context

@@ -14,7 +14,7 @@
 {% for key, value in positions.items  %} {# Loop 1 #}
 <table id="example1" class="text-center table table-bordered">
 <tr>
-  <th class="text-center" colspan="3">{{ key }}</th>
+  <th style="background-color: aqua;" class="text-center" colspan="3">{{ key }} | Maximum Number Of Winners : {{ value.max_vote }}</th>
   </tr>
   <tr>
   <th class="text-center" style="width: 5%;">SN</th>
