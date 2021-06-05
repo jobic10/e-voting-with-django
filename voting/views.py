@@ -136,8 +136,10 @@ def resend_otp(request):
     """
     user = request.user
     voter = user.voter
+    error = False
     if settings.SEND_OTP:
         if voter.otp_sent >= 3:
+            error = True
             response = "You have requested OTP three times. You cannot do this again! Please enter previously sent OTP"
         else:
             phone = voter.phone
@@ -160,6 +162,7 @@ def resend_otp(request):
 
                     response = "OTP has been sent to your phone number. Please provide it in the box provided below"
                 else:
+                    error = True
                     response = "OTP not sent. Please try again"
             except Exception as e:
                 response = "OTP could not be sent." + str(e)
@@ -170,7 +173,7 @@ def resend_otp(request):
         #! Bypass OTP verification by updating verified to 1
         #! Redirect voters to ballot page
         response = bypass_otp()
-    return JsonResponse({"data": response})
+    return JsonResponse({"data": response, "error": error})
 
 
 def bypass_otp():

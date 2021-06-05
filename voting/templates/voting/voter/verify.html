@@ -62,16 +62,22 @@ aria-hidden="true">&times;</button>
       $.ajax({
         url: "{% url 'resend_otp' %}",
         type: 'GET',
-
+        
         success: function(response){
           console.log(response.data)
-          toastr.success(response.data,"OTP Response");
+          console.log(response)
+          if (response.error){
+            toastr.error(response.data,"Error occurred while sending OTP");
+          }else{
+
+            toastr.success(response.data,"OTP Response");
+          }
           button.attr("disabled",false);
 
         },
         error: function(response){
+          alert("Wahala")
           data = JSON.parse(response)
-          toastr.error(data.data,"Error occurred while sending OTP");
           button.attr("disabled",false);
 
         },
