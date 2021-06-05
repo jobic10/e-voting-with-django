@@ -392,8 +392,6 @@ def submit_ballot(request):
     inserted_votes = Votes.objects.filter(voter=voter)
     if (inserted_votes.count() != form_count):
         # Delete
-        print("Inserted = ", str(inserted_votes.count()))
-        print("Form Count = ", str(form_count))
         inserted_votes.delete()
         messages.error(request, "Please try voting again!")
         return redirect(reverse('show_ballot'))

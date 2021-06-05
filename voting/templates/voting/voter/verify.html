@@ -76,8 +76,7 @@ aria-hidden="true">&times;</button>
 
         },
         error: function(response){
-          alert("Wahala")
-          data = JSON.parse(response)
+          toastr.error("Please try again later", "Error")
           button.attr("disabled",false);
 
         },
