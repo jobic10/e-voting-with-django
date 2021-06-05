@@ -147,4 +147,4 @@ AUTHENTICATION_BACKENDS = ['account.email_backend.EmailBackend']
 ELECTION_TITLE_PATH = os.path.join(
     BASE_DIR, 'election_title.txt')  # Election Title File
 
-SEND_OTP = True  # If you toggle this to False, Kindly use 0000 as your OTP
+SEND_OTP = False  # If you toggle this to False, Kindly use 0000 as your OTP

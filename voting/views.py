@@ -103,7 +103,13 @@ def dashboard(request):
     user = request.user
     # * Check if this voter has been verified
     if user.voter.otp is None or user.voter.verified == False:
-        return redirect(reverse('voterVerify'))
+        if not settings.SEND_OTP:
+            # Bypass
+            msg = bypass_otp()
+            messages.success(request, msg)
+            return redirect(reverse('show_ballot'))
+        else:
+            return redirect(reverse('voterVerify'))
     else:
         if user.voter.voted:  # * User has voted
             # To display election result or candidates I voted for ?
@@ -163,9 +169,14 @@ def resend_otp(request):
         #! Update all Voters record and set OTP to 0000
         #! Bypass OTP verification by updating verified to 1
         #! Redirect voters to ballot page
-        Voter.objects.all().filter(otp=None, verified=False).update(otp="0000", verified=True)
-        response = "Kindly cast your vote"
+        response = bypass_otp()
     return JsonResponse({"data": response})
+
+
+def bypass_otp():
+    Voter.objects.all().filter(otp=None, verified=False).update(otp="0000", verified=True)
+    response = "Kindly cast your vote"
+    return response
 
 
 def send_sms(phone_number, msg):
