@@ -10,11 +10,12 @@ import json  # Not used
 from django_renderpdf.views import PDFView
 
 
-def find_n_winners(candidate_data, n):
+def find_n_winners(data, n):
     """Read More
     https://www.geeksforgeeks.org/python-program-to-find-n-largest-elements-from-a-list/
     """
     final_list = []
+    candidate_data = data[:]
     # print("Candidate = ", str(candidate_data))
     for i in range(0, n):
         max1 = 0
@@ -22,18 +23,11 @@ def find_n_winners(candidate_data, n):
             continue
         this_winner = max(candidate_data, key=lambda x: x['votes'])
         # TODO: Check if None
-        final_list.append(this_winner)
+        this = this_winner['name'] + \
+            " with " + str(this_winner['votes']) + " votes"
+        final_list.append(this)
         candidate_data.remove(this_winner)
-        # print(this_winner)
-        # for j in range(len(candidate_data)):
-        #     if candidate_data[j] > max1:
-        #         max1 = candidate_data[j]
-
-        # candidate_data.remove(max1)
-        # final_list.append(max1)
-
-    # print(final_list)
-    return final_list
+    return ", &nbsp;".join(final_list)
 
 
 class PrintView(PDFView):
