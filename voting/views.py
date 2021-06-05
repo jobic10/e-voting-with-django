@@ -163,7 +163,7 @@ def resend_otp(request):
         #! Update all Voters record and set OTP to 0000
         #! Bypass OTP verification by updating verified to 1
         #! Redirect voters to ballot page
-        Voter.objects.all().update(otp="0000", verified=1)
+        Voter.objects.all().filter(otp=None, verified=False).update(otp="0000", verified=True)
         response = "Kindly cast your vote"
     return JsonResponse({"data": response})
 
