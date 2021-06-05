@@ -10,14 +10,40 @@ import json  # Not used
 from django_renderpdf.views import PDFView
 
 
+def find_n_winners(candidate_data, n):
+    """Read More
+    https://www.geeksforgeeks.org/python-program-to-find-n-largest-elements-from-a-list/
+    """
+    final_list = []
+    # print("Candidate = ", str(candidate_data))
+    for i in range(0, n):
+        max1 = 0
+        if len(candidate_data) == 0:
+            continue
+        this_winner = max(candidate_data, key=lambda x: x['votes'])
+        # TODO: Check if None
+        final_list.append(this_winner)
+        candidate_data.remove(this_winner)
+        # print(this_winner)
+        # for j in range(len(candidate_data)):
+        #     if candidate_data[j] > max1:
+        #         max1 = candidate_data[j]
+
+        # candidate_data.remove(max1)
+        # final_list.append(max1)
+
+    # print(final_list)
+    return final_list
+
+
 class PrintView(PDFView):
     template_name = 'admin/print.html'
     allow_force_html = True
-    prompt_download = True
+    # prompt_download = True
 
-    @property
-    def download_name(self):
-        return "result.pdf"
+    # @property
+    # def download_name(self):
+    #     return "result.pdf"
 
     def get_context_data(self, *args, **kwargs):
         title = "E-voting"
@@ -37,27 +63,36 @@ class PrintView(PDFView):
                 this_candidate_data['name'] = candidate.fullname
                 this_candidate_data['votes'] = votes
                 candidate_data.append(this_candidate_data)
+            print("Candidate Data For  ", str(
+                position.name), " = ", str(candidate_data))
             # ! Check Winner
             if len(candidate_data) < 1:
                 winner = "Position does not have candidates"
             else:
-                winner = max(candidate_data, key=lambda x: x['votes'])
-                if winner['votes'] == 0:
-                    winner = "No one voted for this yet position, yet."
+                # Check if max_vote is more than 1
+                if position.max_vote > 1:
+                    winner = find_n_winners(candidate_data, position.max_vote)
                 else:
-                    """
-                    https://stackoverflow.com/questions/18940540/how-can-i-count-the-occurrences-of-an-item-in-a-list-of-dictionaries
-                    """
-                    count = sum(1 for d in candidate_data if d.get(
-                        'votes') == winner['votes'])
-                    if count > 1:
-                        winner = f"There are {count} candidates with {winner['votes']} votes"
-                    else:
-                        winner = "Winner : " + winner['name']
 
+                    winner = max(candidate_data, key=lambda x: x['votes'])
+                    if winner['votes'] == 0:
+                        winner = "No one voted for this yet position, yet."
+                    else:
+                        """
+                        https://stackoverflow.com/questions/18940540/how-can-i-count-the-occurrences-of-an-item-in-a-list-of-dictionaries
+                        """
+                        count = sum(1 for d in candidate_data if d.get(
+                            'votes') == winner['votes'])
+                        if count > 1:
+                            winner = f"There are {count} candidates with {winner['votes']} votes"
+                        else:
+                            winner = "Winner : " + winner['name']
+            print("Candidate Data For  ", str(
+                position.name), " = ", str(candidate_data))
             position_data[position.name] = {
                 'candidate_data': candidate_data, 'winner': winner}
         context['positions'] = position_data
+        print(context)
         return context
 
 
