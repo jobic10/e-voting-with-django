@@ -56,7 +56,7 @@ def account_register(request):
 def account_logout(request):
     user = request.user
     if user.is_authenticated:
-        logout(user)
+        logout(request)
         messages.success(request, "Thank you for visiting us!")
     else:
         messages.error(
