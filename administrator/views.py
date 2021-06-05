@@ -45,7 +45,15 @@ class PrintView(PDFView):
                 if winner['votes'] == 0:
                     winner = "No one voted for this yet position, yet."
                 else:
-                    winner = "Winner : " + winner['name']
+                    """
+                    https://stackoverflow.com/questions/18940540/how-can-i-count-the-occurrences-of-an-item-in-a-list-of-dictionaries
+                    """
+                    count = sum(1 for d in candidate_data if d.get(
+                        'votes') == winner['votes'])
+                    if count > 1:
+                        winner = f"There are {count} candidates with {winner['votes']} votes"
+                    else:
+                        winner = "Winner : " + winner['name']
 
             position_data[position.name] = {
                 'candidate_data': candidate_data, 'winner': winner}
