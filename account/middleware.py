@@ -12,17 +12,9 @@ class AccountCheckMiddleWare(MiddlewareMixin):
             if user.user_type == '1':  # Admin
                 if modulename == 'voting.views':
                     error = True
-                    from urllib.parse import urlparse
-                    url = urlparse(request.path).path
-                    from django.urls import resolve
-                    try:
-                        redirect_url = resolve(url)
-                        if redirect_url.url_name == 'fetch_ballot':
-                            error = False
-                            pass
-                    except Exception as e:
+                    if request.path == reverse('fetch_ballot'):
                         pass
-                    if error:
+                    else:
                         messages.error(
                             request, "You do not have access to this resource")
                         return redirect(reverse('adminDashboard'))
