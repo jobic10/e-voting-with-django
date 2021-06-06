@@ -18,9 +18,7 @@ class AccountCheckMiddleWare(MiddlewareMixin):
                         messages.error(
                             request, "You do not have access to this resource")
                         return redirect(reverse('adminDashboard'))
-
             elif user.user_type == '2':  # Voter
-                # or modulename == 'main_app.hod_views':
                 if modulename == 'administrator.views':
                     messages.error(
                         request, "You do not have access to this resource")
@@ -31,5 +29,10 @@ class AccountCheckMiddleWare(MiddlewareMixin):
             # If the path is login or has anything to do with authentication, pass
             if request.path == reverse('account_login') or modulename == 'django.contrib.auth.views' or request.path == reverse('account_login'):
                 pass
+            elif modulename == 'administrator.views' or modulename == 'voting.views':
+                # If visitor tries to access administrator or voters functions
+                messages.error(
+                    request, "You need to be logged in to perform this operation")
+                return redirect(reverse('account_login'))
             else:
                 return redirect(reverse('account_login'))
