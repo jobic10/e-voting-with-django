@@ -130,7 +130,7 @@ dmypy.json
 
 
 # Django Ignore
-db.sqlite3
+# db.sqlite3
 .vscode
 .idea
 *.pyc
