@@ -12,17 +12,18 @@ The Voting System web application using Django is a project that serves as the a
 [Front-end Template](http://adminlte.io "Admin LTE.io")
 
 
-Features:
-[x] Vote preview
-[x] Multiple votes
-[x] Result tally via Horizontal Bar Chart
-[x] Print voting results in PDF
-[x] Changeable order of positions to show in the ballot
-[x] CRUD voters
-[x] CRUD candidates
-[x] CRUD positions
-[x] Plugins
-[x] AdminLTE
+## Features:
+
+- [x] Vote preview
+- [x] Multiple votes
+- [x] Result tally via Horizontal Bar Chart
+- [x] Print voting results in PDF
+- [x] Changeable order of positions to show in the ballot
+- [x] CRUD voters
+- [x] CRUD candidates
+- [x] CRUD positions
+- [x] Plugins
+- [x] AdminLTE Template
 
 ### A. Admin Users Can
 1. See Overall Summary Charts of Votes
