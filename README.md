@@ -141,12 +141,12 @@ $  source bin/activate
 
 **3. Clone this project**
 ```
-$  git clone https://github.com/jobic10/student-management-using-django.git
+$  git clone https://github.com/jobic10/e-voting-with-django.git
 ```
 
 Then, Enter the project
 ```
-$  cd student-management-using-django
+$  cd e-voting-with-django
 ```
 
 **4. Install Requirements from 'requirements.txt'**
