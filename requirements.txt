@@ -2,5 +2,5 @@ Django==3.1.1
 mysql-connector==2.2.9
 virtualenv==20.0.31
 Pillow==7.2.0
-django-renderpdf2==3.0.1
+django-renderpdf==3.0.1
 requests==2.24.0
