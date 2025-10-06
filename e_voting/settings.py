@@ -39,9 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # My Created Applications
-    'account.apps.AccountConfig',
-    'voting.apps.VotingConfig',
-    'administrator.apps.AdministratorConfig',
+    'account',
+    'administrator',
+    'voting',
 ]
 
 MIDDLEWARE = [
