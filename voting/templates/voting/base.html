@@ -111,7 +111,7 @@
     </script> -->
 
     <script>
-        toastr.{{ message.tags }}('{{ message }}', '{{ message.tags|title }}');
+        toastr["{{ message.tags }}"]('{{ message }}', '{{ message.tags|title }}');
     </script>
     {% endfor %}
     {% endif %}
