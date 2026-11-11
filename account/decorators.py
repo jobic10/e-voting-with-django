@@ -1,6 +1,7 @@
 from functools import wraps
 
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.shortcuts import redirect, reverse
 
@@ -34,7 +35,10 @@ def role_required(role):
                     return JsonResponse({'error': True, 'message': 'Permission denied'}, status=403)
                 messages.error(request, "You do not have access to this resource")
                 home = HOME_FOR_ROLE.get(str(user.user_type))
-                return redirect(reverse(home) if home else reverse('account_logout'))
+                if home is None:  # Unknown role: end the session
+                    logout(request)
+                    return redirect(reverse('account_login'))
+                return redirect(reverse(home))
             return view_func(request, *args, **kwargs)
         return _wrapped
     return decorator

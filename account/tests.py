@@ -95,3 +95,32 @@ class AccessControlTests(BaseTestCase):
         response = self.client.get(reverse('voterDashboard'))
         self.assertRedirects(response, reverse('account_login'), fetch_redirect_response=False)
         self.assertNotIn('_auth_user_id', self.client.session)
+
+
+class LogoutTests(BaseTestCase):
+    def test_logout_requires_post(self):
+        user = make_voter()
+        self.client.force_login(user)
+        response = self.client.get(reverse('account_logout'))
+        self.assertEqual(response.status_code, 405)
+        self.assertIn('_auth_user_id', self.client.session)
+
+    def test_logout_requires_csrf_token(self):
+        from django.test import Client
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(make_voter())
+        response = client.post(reverse('account_logout'))
+        self.assertEqual(response.status_code, 403)
+        self.assertIn('_auth_user_id', client.session)
+
+    def test_post_logs_out(self):
+        self.client.force_login(make_voter())
+        response = self.client.post(reverse('account_logout'))
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_logout_rendered_as_form(self):
+        self.client.force_login(make_admin())
+        content = self.client.get(reverse('adminDashboard')).content.decode()
+        self.assertIn('action="%s"' % reverse('account_logout'), content)
+        self.assertNotIn('href="%s"' % reverse('account_logout'), content)

@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.db import transaction
 from django.shortcuts import redirect, render, reverse
+from django.views.decorators.http import require_POST
 
 from voting.forms import VoterForm
 
@@ -71,6 +72,7 @@ def account_register(request):
     return render(request, "voting/reg.html", context)
 
 
+@require_POST
 def account_logout(request):
     user = request.user
     if user.is_authenticated:
