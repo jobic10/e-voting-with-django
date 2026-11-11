@@ -54,7 +54,10 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal"><i class="fa fa-close"></i> Close</button>
-            <a href="{% url 'resetVote' %}" class="btn btn-danger btn-flat"><i class="fa fa-refresh"></i> Reset</a>
+            <form method="POST" action="{% url 'resetVote' %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-flat"><i class="fa fa-refresh"></i> Reset</button>
+            </form>
           </div>
       </div>
   </div>
@@ -95,7 +98,7 @@
           success: function(response) {
             $('.id').val(id),
               $('.display_form').html(response.form);
-              $('.fullname').html(response.fullname);
+              $('.fullname').text(response.fullname);
           },
          
       });

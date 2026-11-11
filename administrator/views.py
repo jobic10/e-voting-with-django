@@ -1,121 +1,137 @@
-from django.shortcuts import render, reverse, redirect
-from voting.models import Voter, Position, Candidate, Votes
-from account.models import CustomUser
-from account.forms import CustomUserForm
-from voting.forms import *
-from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
+import json
+
 from django.conf import settings
-import json  # Not used
-from django_renderpdf.views import PDFView
+from django.contrib import messages
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import transaction
+from django.db.models import Count, F, Prefetch
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render, reverse
+from django.utils.decorators import method_decorator
+from django.utils.html import escape
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.safestring import mark_safe
+from django.views import View
+from django.views.decorators.http import require_POST
+
+from account.decorators import admin_required
+from account.forms import CustomUserForm
+from voting.forms import CandidateForm, PositionForm, VoterForm
+from voting.models import Candidate, Position, Voter, Votes
+
+ELECTION_TITLE_MAX_LENGTH = 200
+
+# Same escaping Django's json_script filter uses, so JSON can be embedded
+# inside a <script> block without allowing "</script>" break-outs.
+_JSON_SCRIPT_ESCAPES = {
+    ord('>'): '\\u003E',
+    ord('<'): '\\u003C',
+    ord('&'): '\\u0026',
+}
+
+
+def js_json(value):
+    return mark_safe(json.dumps(value, cls=DjangoJSONEncoder).translate(_JSON_SCRIPT_ESCAPES))
+
+
+def positions_with_vote_counts(order_by='priority'):
+    """Positions with their candidates annotated with vote totals (2 queries)."""
+    candidates = Candidate.objects.annotate(
+        votes_total=Count('votes')).order_by('id')
+    return Position.objects.order_by(order_by, 'id').prefetch_related(
+        Prefetch('candidate_set', queryset=candidates))
 
 
 def find_n_winners(data, n):
-    """Read More
-    https://www.geeksforgeeks.org/python-program-to-find-n-largest-elements-from-a-list/
-    """
-    final_list = []
-    candidate_data = data[:]
-    # print("Candidate = ", str(candidate_data))
-    for i in range(0, n):
-        max1 = 0
-        if len(candidate_data) == 0:
-            continue
-        this_winner = max(candidate_data, key=lambda x: x['votes'])
-        # TODO: Check if None
-        this = this_winner['name'] + \
-            " with " + str(this_winner['votes']) + " votes"
-        final_list.append(this)
-        candidate_data.remove(this_winner)
-    return ", &nbsp;".join(final_list)
+    """Return the ``n`` candidates with the most votes as escaped HTML."""
+    ranked = sorted(data, key=lambda x: x['votes'], reverse=True)[:n]
+    final_list = [escape(winner['name']) + " with " +
+                  str(winner['votes']) + " votes" for winner in ranked]
+    return mark_safe(", &nbsp;".join(final_list))
 
 
-class PrintView(PDFView):
-    template_name = 'admin/print.html'
-    prompt_download = True
+def read_election_title(default="E-voting"):
+    try:
+        with open(settings.ELECTION_TITLE_PATH, 'r') as file:
+            return file.read()
+    except OSError:
+        return default
 
-    @property
-    def download_name(self):
-        return "result.pdf"
 
-    def get_context_data(self, *args, **kwargs):
-        title = "E-voting"
-        try:
-            file = open(settings.ELECTION_TITLE_PATH, 'r')
-            title = file.read()
-        except:
-            pass
-        context = super().get_context_data(*args, **kwargs)
-        position_data = {}
-        for position in Position.objects.all():
-            candidate_data = []
-            winner = ""
-            for candidate in Candidate.objects.filter(position=position):
-                this_candidate_data = {}
-                votes = Votes.objects.filter(candidate=candidate).count()
-                this_candidate_data['name'] = candidate.fullname
-                this_candidate_data['votes'] = votes
-                candidate_data.append(this_candidate_data)
-            print("Candidate Data For  ", str(
-                position.name), " = ", str(candidate_data))
-            # ! Check Winner
-            if len(candidate_data) < 1:
-                winner = "Position does not have candidates"
+def get_result_context():
+    position_data = {}
+    for position in positions_with_vote_counts():
+        candidate_data = [
+            {'name': candidate.fullname, 'votes': candidate.votes_total}
+            for candidate in position.candidate_set.all()
+        ]
+        # ! Check Winner
+        if len(candidate_data) < 1:
+            winner = "Position does not have candidates"
+        else:
+            # Check if max_vote is more than 1
+            if position.max_vote > 1:
+                winner = find_n_winners(candidate_data, position.max_vote)
             else:
-                # Check if max_vote is more than 1
-                if position.max_vote > 1:
-                    winner = find_n_winners(candidate_data, position.max_vote)
+                winner = max(candidate_data, key=lambda x: x['votes'])
+                if winner['votes'] == 0:
+                    winner = "No one voted for this yet position, yet."
                 else:
-
-                    winner = max(candidate_data, key=lambda x: x['votes'])
-                    if winner['votes'] == 0:
-                        winner = "No one voted for this yet position, yet."
+                    count = sum(1 for d in candidate_data if d.get(
+                        'votes') == winner['votes'])
+                    if count > 1:
+                        winner = f"There are {count} candidates with {winner['votes']} votes"
                     else:
-                        """
-                        https://stackoverflow.com/questions/18940540/how-can-i-count-the-occurrences-of-an-item-in-a-list-of-dictionaries
-                        """
-                        count = sum(1 for d in candidate_data if d.get(
-                            'votes') == winner['votes'])
-                        if count > 1:
-                            winner = f"There are {count} candidates with {winner['votes']} votes"
-                        else:
-                            winner = "Winner : " + winner['name']
-            print("Candidate Data For  ", str(
-                position.name), " = ", str(candidate_data))
-            position_data[position.name] = {
-                'candidate_data': candidate_data, 'winner': winner, 'max_vote': position.max_vote}
-        context['positions'] = position_data
-        print(context)
-        return context
+                        winner = "Winner : " + escape(winner['name'])
+        position_data[position.name] = {
+            'candidate_data': candidate_data, 'winner': winner, 'max_vote': position.max_vote}
+    return position_data
 
 
+@method_decorator(admin_required, name='dispatch')
+class PrintView(View):
+    template_name = 'admin/print.html'
+    download_name = "result.pdf"
+
+    def get_context_data(self, **kwargs):
+        return {
+            'title': read_election_title(),
+            'positions': get_result_context(),
+        }
+
+    def get(self, request, *args, **kwargs):
+        # Imported lazily: WeasyPrint needs system libraries (Pango) and the
+        # rest of the admin should keep working without them.
+        from django_renderpdf import helpers
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{self.download_name}"'
+        helpers.render_pdf(
+            template=self.template_name,
+            file_=response,
+            url_fetcher=helpers.django_url_fetcher,
+            context=self.get_context_data(**kwargs),
+        )
+        return response
+
+
+@admin_required
 def dashboard(request):
-    positions = Position.objects.all().order_by('priority')
-    candidates = Candidate.objects.all()
-    voters = Voter.objects.all()
-    voted_voters = Voter.objects.filter(voted=1)
-    list_of_candidates = []
-    votes_count = []
+    positions = list(positions_with_vote_counts())
     chart_data = {}
 
     for position in positions:
-        list_of_candidates = []
-        votes_count = []
-        for candidate in Candidate.objects.filter(position=position):
-            list_of_candidates.append(candidate.fullname)
-            votes = Votes.objects.filter(candidate=candidate).count()
-            votes_count.append(votes)
+        candidates = position.candidate_set.all()
         chart_data[position] = {
-            'candidates': list_of_candidates,
-            'votes': votes_count,
+            'candidates': js_json([candidate.fullname for candidate in candidates]),
+            'votes': js_json([candidate.votes_total for candidate in candidates]),
             'pos_id': position.id
         }
 
     context = {
-        'position_count': positions.count(),
-        'candidate_count': candidates.count(),
-        'voters_count': voters.count(),
-        'voted_voters_count': voted_voters.count(),
+        'position_count': len(positions),
+        'candidate_count': Candidate.objects.count(),
+        'voters_count': Voter.objects.count(),
+        'voted_voters_count': Voter.objects.filter(voted=True).count(),
         'positions': positions,
         'chart_data': chart_data,
         'page_title': "Dashboard"
@@ -123,8 +139,9 @@ def dashboard(request):
     return render(request, "admin/home.html", context)
 
 
+@admin_required
 def voters(request):
-    voters = Voter.objects.all()
+    voters = Voter.objects.select_related('admin')
     userForm = CustomUserForm(request.POST or None)
     voterForm = VoterForm(request.POST or None)
     context = {
@@ -135,26 +152,29 @@ def voters(request):
     }
     if request.method == 'POST':
         if userForm.is_valid() and voterForm.is_valid():
-            user = userForm.save(commit=False)
-            voter = voterForm.save(commit=False)
-            voter.admin = user
-            user.save()
-            voter.save()
+            with transaction.atomic():
+                user = userForm.save(commit=False)
+                user.user_type = '2'
+                voter = voterForm.save(commit=False)
+                user.save()
+                voter.admin = user
+                voter.save()
             messages.success(request, "New voter created")
         else:
             messages.error(request, "Form validation failed")
     return render(request, "admin/voters.html", context)
 
 
+@admin_required
 def view_voter_by_id(request):
     voter_id = request.GET.get('id', None)
-    voter = Voter.objects.filter(id=voter_id)
+    voter = Voter.objects.select_related('admin').filter(id=voter_id).first() \
+        if str(voter_id).isdigit() else None
     context = {}
-    if not voter.exists():
+    if voter is None:
         context['code'] = 404
     else:
         context['code'] = 200
-        voter = voter[0]
         context['first_name'] = voter.admin.first_name
         context['last_name'] = voter.admin.last_name
         context['phone'] = voter.phone
@@ -163,52 +183,58 @@ def view_voter_by_id(request):
     return JsonResponse(context)
 
 
+@admin_required
 def view_position_by_id(request):
     pos_id = request.GET.get('id', None)
-    pos = Position.objects.filter(id=pos_id)
+    pos = Position.objects.filter(id=pos_id).first() if str(pos_id).isdigit() else None
     context = {}
-    if not pos.exists():
+    if pos is None:
         context['code'] = 404
     else:
         context['code'] = 200
-        pos = pos[0]
         context['name'] = pos.name
         context['max_vote'] = pos.max_vote
         context['id'] = pos.id
     return JsonResponse(context)
 
 
+@admin_required
+@require_POST
 def updateVoter(request):
-    if request.method != 'POST':
-        messages.error(request, "Access Denied")
     try:
-        instance = Voter.objects.get(id=request.POST.get('id'))
-        user = CustomUserForm(request.POST or None, instance=instance.admin)
-        voter = VoterForm(request.POST or None, instance=instance)
-        user.save()
-        voter.save()
-        messages.success(request, "Voter's bio updated")
-    except:
+        instance = Voter.objects.select_related('admin').get(id=request.POST.get('id'))
+    except (Voter.DoesNotExist, ValueError):
         messages.error(request, "Access To This Resource Denied")
+        return redirect(reverse('adminViewVoters'))
+    user = CustomUserForm(request.POST, instance=instance.admin)
+    voter = VoterForm(request.POST, instance=instance)
+    if user.is_valid() and voter.is_valid():
+        with transaction.atomic():
+            user.save()
+            voter.save()
+        messages.success(request, "Voter's bio updated")
+    else:
+        messages.error(request, "Form validation failed")
 
     return redirect(reverse('adminViewVoters'))
 
 
+@admin_required
+@require_POST
 def deleteVoter(request):
-    if request.method != 'POST':
-        messages.error(request, "Access Denied")
     try:
-        admin = Voter.objects.get(id=request.POST.get('id')).admin
+        admin = Voter.objects.select_related('admin').get(id=request.POST.get('id')).admin
         admin.delete()
         messages.success(request, "Voter Has Been Deleted")
-    except:
+    except (Voter.DoesNotExist, ValueError):
         messages.error(request, "Access To This Resource Denied")
 
     return redirect(reverse('adminViewVoters'))
 
 
+@admin_required
 def viewPositions(request):
-    positions = Position.objects.order_by('-priority').all()
+    positions = Position.objects.order_by('-priority')
     form = PositionForm(request.POST or None)
     context = {
         'positions': positions,
@@ -218,7 +244,7 @@ def viewPositions(request):
     if request.method == 'POST':
         if form.is_valid():
             form = form.save(commit=False)
-            form.priority = positions.count() + 1  # Just in case it is empty.
+            form.priority = Position.objects.count() + 1  # Just in case it is empty.
             form.save()
             messages.success(request, "New Position Created")
         else:
@@ -226,35 +252,40 @@ def viewPositions(request):
     return render(request, "admin/positions.html", context)
 
 
+@admin_required
+@require_POST
 def updatePosition(request):
-    if request.method != 'POST':
-        messages.error(request, "Access Denied")
     try:
         instance = Position.objects.get(id=request.POST.get('id'))
-        pos = PositionForm(request.POST or None, instance=instance)
+    except (Position.DoesNotExist, ValueError):
+        messages.error(request, "Access To This Resource Denied")
+        return redirect(reverse('viewPositions'))
+    pos = PositionForm(request.POST, instance=instance)
+    if pos.is_valid():
         pos.save()
         messages.success(request, "Position has been updated")
-    except:
-        messages.error(request, "Access To This Resource Denied")
+    else:
+        messages.error(request, "Form errors")
 
     return redirect(reverse('viewPositions'))
 
 
+@admin_required
+@require_POST
 def deletePosition(request):
-    if request.method != 'POST':
-        messages.error(request, "Access Denied")
     try:
         pos = Position.objects.get(id=request.POST.get('id'))
         pos.delete()
         messages.success(request, "Position Has Been Deleted")
-    except:
+    except (Position.DoesNotExist, ValueError):
         messages.error(request, "Access To This Resource Denied")
 
     return redirect(reverse('viewPositions'))
 
 
+@admin_required
 def viewCandidates(request):
-    candidates = Candidate.objects.all()
+    candidates = Candidate.objects.select_related('position')
     form = CandidateForm(request.POST or None, request.FILES or None)
     context = {
         'candidates': candidates,
@@ -270,46 +301,46 @@ def viewCandidates(request):
     return render(request, "admin/candidates.html", context)
 
 
+@admin_required
+@require_POST
 def updateCandidate(request):
-    if request.method != 'POST':
-        messages.error(request, "Access Denied")
     try:
-        candidate_id = request.POST.get('id')
-        candidate = Candidate.objects.get(id=candidate_id)
-        form = CandidateForm(request.POST or None,
-                             request.FILES or None, instance=candidate)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Candidate Data Updated")
-        else:
-            messages.error(request, "Form has errors")
-    except:
+        candidate = Candidate.objects.get(id=request.POST.get('id'))
+    except (Candidate.DoesNotExist, ValueError):
         messages.error(request, "Access To This Resource Denied")
+        return redirect(reverse('viewCandidates'))
+    form = CandidateForm(request.POST, request.FILES or None, instance=candidate)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Candidate Data Updated")
+    else:
+        messages.error(request, "Form has errors")
 
     return redirect(reverse('viewCandidates'))
 
 
+@admin_required
+@require_POST
 def deleteCandidate(request):
-    if request.method != 'POST':
-        messages.error(request, "Access Denied")
     try:
         pos = Candidate.objects.get(id=request.POST.get('id'))
         pos.delete()
         messages.success(request, "Candidate Has Been Deleted")
-    except:
+    except (Candidate.DoesNotExist, ValueError):
         messages.error(request, "Access To This Resource Denied")
 
     return redirect(reverse('viewCandidates'))
 
 
+@admin_required
 def view_candidate_by_id(request):
     candidate_id = request.GET.get('id', None)
-    candidate = Candidate.objects.filter(id=candidate_id)
+    candidate = Candidate.objects.filter(id=candidate_id).first() \
+        if str(candidate_id).isdigit() else None
     context = {}
-    if not candidate.exists():
+    if candidate is None:
         context['code'] = 404
     else:
-        candidate = candidate[0]
         context['code'] = 200
         context['fullname'] = candidate.fullname
         previous = CandidateForm(instance=candidate)
@@ -317,6 +348,7 @@ def view_candidate_by_id(request):
     return JsonResponse(context)
 
 
+@admin_required
 def ballot_position(request):
     context = {
         'page_title': "Ballot Position"
@@ -324,61 +356,73 @@ def ballot_position(request):
     return render(request, "admin/ballot_position.html", context)
 
 
+@admin_required
+@require_POST
 def update_ballot_position(request, position_id, up_or_down):
-    try:
-        context = {
-            'error': False
-        }
-        position = Position.objects.get(id=position_id)
+    context = {
+        'error': False
+    }
+    if up_or_down not in ('up', 'down'):
+        return JsonResponse({'error': True, 'message': "Invalid direction"}, status=400)
+    with transaction.atomic():
+        try:
+            position = Position.objects.select_for_update().get(id=position_id)
+        except Position.DoesNotExist:
+            return JsonResponse({'error': True, 'message': "Position not found"}, status=404)
         if up_or_down == 'up':
             priority = position.priority - 1
-            if priority == 0:
+            if priority < 1:
                 context['error'] = True
                 output = "This position is already at the top"
             else:
                 Position.objects.filter(priority=priority).update(
-                    priority=(priority+1))
+                    priority=F('priority') + 1)
                 position.priority = priority
-                position.save()
+                position.save(update_fields=['priority'])
                 output = "Moved Up"
         else:
             priority = position.priority + 1
-            if priority > Position.objects.all().count():
+            if priority > Position.objects.count():
                 output = "This position is already at the bottom"
                 context['error'] = True
             else:
                 Position.objects.filter(priority=priority).update(
-                    priority=(priority-1))
+                    priority=F('priority') - 1)
                 position.priority = priority
-                position.save()
+                position.save(update_fields=['priority'])
                 output = "Moved Down"
-        context['message'] = output
-    except Exception as e:
-        context['message'] = e
-
+    context['message'] = output
     return JsonResponse(context)
 
 
+@admin_required
+@require_POST
 def ballot_title(request):
-    from urllib.parse import urlparse
-    url = urlparse(request.META['HTTP_REFERER']).path
-    from django.urls import resolve
+    referer = request.META.get('HTTP_REFERER', '')
+    if url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()},
+                                       require_https=request.is_secure()):
+        redirect_url = referer
+    else:
+        redirect_url = reverse('adminDashboard')
+    title = (request.POST.get('title') or '').strip()
+    if not title or len(title) > ELECTION_TITLE_MAX_LENGTH:
+        messages.error(request, "Election title must be between 1 and %d characters" %
+                       ELECTION_TITLE_MAX_LENGTH)
+        return redirect(redirect_url)
     try:
-        redirect_url = resolve(url)
-        title = request.POST.get('title', 'No Name')
-        file = open(settings.ELECTION_TITLE_PATH, 'w')
-        file.write(title)
-        file.close()
-        messages.success(
-            request, "Election title has been changed to " + str(title))
-        return redirect(url)
-    except Exception as e:
-        messages.error(request, e)
-        return redirect("/")
+        with open(settings.ELECTION_TITLE_PATH, 'w') as file:
+            file.write(title)
+    except OSError:
+        messages.error(request, "Election title could not be saved")
+        return redirect(redirect_url)
+    messages.success(
+        request, "Election title has been changed to " + str(title))
+    return redirect(redirect_url)
 
 
+@admin_required
 def viewVotes(request):
-    votes = Votes.objects.all()
+    votes = Votes.objects.select_related('voter__admin', 'candidate', 'position')
     context = {
         'votes': votes,
         'page_title': 'Votes'
@@ -386,8 +430,11 @@ def viewVotes(request):
     return render(request, "admin/votes.html", context)
 
 
+@admin_required
+@require_POST
 def resetVote(request):
-    Votes.objects.all().delete()
-    Voter.objects.all().update(voted=False, verified=False, otp=None)
+    with transaction.atomic():
+        Votes.objects.all().delete()
+        Voter.objects.all().update(voted=False, verified=False, otp=None, otp_sent=0)
     messages.success(request, "All votes has been reset")
     return redirect(reverse('viewVotes'))
