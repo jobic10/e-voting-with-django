@@ -1,5 +1,4 @@
-Django
-mysql-connector-python 
-Pillow
-django-renderpdf
-requests
+Django==5.2.19
+Pillow==13.0.0
+django-renderpdf==6.1.1
+requests==2.34.2

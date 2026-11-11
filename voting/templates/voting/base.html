@@ -85,6 +85,10 @@
 <script src="{% static 'dist/js/adminlte.min.js' %}"></script>
 <!-- Data Table Initialize -->
 <script src="{% static 'toastr/toastr.min.js' %}"></script>
+    <script>
+      // Send the CSRF token with every jQuery AJAX request
+      $.ajaxSetup({ headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
+    </script>
 <script>
   $(function () {
     $('#example1').DataTable()

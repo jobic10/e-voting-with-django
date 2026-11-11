@@ -1,5 +1,8 @@
 from django import forms
-from .models import *
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
+
+from .models import CustomUser
 
 
 class FormSettings(forms.ModelForm):
@@ -12,7 +15,6 @@ class FormSettings(forms.ModelForm):
 
 class CustomUserForm(FormSettings):
     email = forms.EmailField(required=True)
-    # email = forms.EmailField(required=True)
     password = forms.CharField(widget=forms.PasswordInput)
 
     widget = {
@@ -25,7 +27,8 @@ class CustomUserForm(FormSettings):
             instance = kwargs.get('instance').__dict__
             self.fields['password'].required = False
             for field in CustomUserForm.Meta.fields:
-                self.fields[field].initial = instance.get(field)
+                if field != 'password':  # Never echo the password hash back
+                    self.fields[field].initial = instance.get(field)
             if self.instance.pk is not None:
                 self.fields['password'].widget.attrs['placeholder'] = "Fill this only if you wish to update password"
         else:
@@ -34,26 +37,21 @@ class CustomUserForm(FormSettings):
 
     def clean_email(self, *args, **kwargs):
         formEmail = self.cleaned_data['email'].lower()
-        if self.instance.pk is None:  # Insert
-            if CustomUser.objects.filter(email=formEmail).exists():
-                raise forms.ValidationError(
-                    "The given email is already registered")
-        else:  # Update
-            dbEmail = self.Meta.model.objects.get(
-                id=self.instance.pk).email.lower()
-            if dbEmail != formEmail:  # There has been changes
-                if CustomUser.objects.filter(email=formEmail).exists():
-                    raise forms.ValidationError(
-                        "The given email is already registered")
+        others = CustomUser.objects.filter(email__iexact=formEmail)
+        if self.instance.pk is not None:  # Update
+            others = others.exclude(pk=self.instance.pk)
+        if others.exists():
+            raise forms.ValidationError(
+                "The given email is already registered")
         return formEmail
 
     def clean_password(self):
         password = self.cleaned_data.get("password", None)
         if self.instance.pk is not None:
             if not password:
-                # return None
                 return self.instance.password
-
+        # Enforce AUTH_PASSWORD_VALIDATORS before hashing
+        validate_password(password, user=self.instance if self.instance.pk else None)
         return make_password(password)
 
     class Meta:

@@ -61,7 +61,7 @@ aria-hidden="true">&times;</button>
       button.attr("disabled",true);
       $.ajax({
         url: "{% url 'resend_otp' %}",
-        type: 'GET',
+        type: 'POST',
         
         success: function(response){
           console.log(response.data)

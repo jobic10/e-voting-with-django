@@ -164,7 +164,7 @@
           success: function(response) {
             $('.id').val(id),
               $('.display_form').html(response.form);
-              $('.fullname').html(response.fullname);
+              $('.fullname').text(response.fullname);
           },
          
       });

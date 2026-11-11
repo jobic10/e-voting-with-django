@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      # Best effort: if the Ubuntu mirrors are unreachable the rest of the
+      # suite still runs and only the PDF rendering test is skipped.
+      - name: Install WeasyPrint system libraries
+        continue-on-error: true
+        timeout-minutes: 5
+        run: |
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=3 \
+            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Check for missing migrations
+        run: python manage.py makemigrations --check --dry-run
+        env:
+          DJANGO_DEBUG: "True"
+      - name: Run tests
+        run: python manage.py test
+        env:
+          DJANGO_DEBUG: "True"

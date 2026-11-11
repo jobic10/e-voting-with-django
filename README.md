@@ -74,6 +74,14 @@ This Voting System web application built using Django can serve as the automated
 
 
 
+## Running tests
+```
+$  DJANGO_DEBUG=True python manage.py test
+```
+PDF printing uses [WeasyPrint](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation),
+which needs Pango installed on the system (e.g. `brew install pango` or `apt install libpango-1.0-0`).
+The PDF test is skipped when Pango is not available.
+
 ## Support Developer
 1. Add a Star 🌟  to this 👆 Repository
 2. Follow on Twitter/Github
@@ -154,11 +162,35 @@ $  cd e-voting-with-django
 $  pip3 install -r requirements.txt
 ```
 
-**5. Run migrations and migrate**
-```python manage.py makemigrations```
+**5. Configure environment variables**
+
+The project reads its secrets and flags from the environment:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `DJANGO_SECRET_KEY` | *(required unless `DJANGO_DEBUG=True`)* | Django secret key |
+| `DJANGO_DEBUG` | `False` | Set to `True` for local development only |
+| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` when debugging | Comma separated host names |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | *(empty)* | e.g. `https://vote.example.com` |
+| `DJANGO_SECURE_SSL_REDIRECT`, `DJANGO_HSTS_SECONDS`, `DJANGO_BEHIND_PROXY` | off | HTTPS hardening in production |
+| `SEND_OTP` | `True` | Set to `False` to skip SMS OTP verification |
+| `SMS_EMAIL`, `SMS_PASSWORD` | *(empty)* | Multitexter credentials used to send OTPs |
+| `ALLOW_VOTER_REGISTRATION` | `True` | Set to `False` to close voter self-registration |
+
+For local development:
+```
+$  export DJANGO_DEBUG=True SEND_OTP=False
+```
+
+**6. Run migrations**
 ```python manage.py migrate```
 
-**6. Now Run Server**
+> Migrations are now committed to the repository. If you created your own
+> migrations before, delete the local `account/migrations/0001_*.py` and
+> `voting/migrations/0001_*.py` files and run `python manage.py migrate --fake-initial`
+> against your existing database.
+
+**7. Now Run Server**
 
 Command for PC:
 ```python
@@ -175,7 +207,7 @@ Command for Linux:
 $ python3 manage.py runserver
 ```
 
-**7. Login Credentials**
+**8. Login Credentials**
 
 Create Super User (HOD)
 Command for PC:
